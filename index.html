@@ -45,6 +45,18 @@
             margin-top: 20px; gap: 10px; font-size: 18px; color: white; font-weight: bold;
         }
         .checkbox-container input { width: 22px; height: 22px; }
+
+        .warning-box {
+            background-color: rgba(255, 77, 77, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -54,8 +66,11 @@
         <h1>🎸 吉他社迎新解謎大冒險</h1>
         <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
         
+        <!-- 額滿提示區塊 (預設隱藏) -->
+        <div id="full-warning" class="warning-box" style="display: none;"></div>
+
         <div style="flex-grow: 1;"></div>
-        <button class="btn btn-green" onclick="assignTeam()">點我抽取分組</button>
+        <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">點我抽取分組</button>
     </div>
 
     <!-- 畫面 2: 分組結果與人數確認 -->
@@ -72,7 +87,7 @@
         
         <div class="checkbox-container">
             <input type="checkbox" id="team-ready-checkbox" onchange="toggleStartButton()">
-            <label for="team-ready-checkbox" id="ready-label">我們已經全員到齊</label>
+            <label for="team-ready-checkbox" id="ready-label">我們全組隊員已集合完畢</label>
         </div>
         
         <div style="flex-grow: 1;"></div>
@@ -98,8 +113,7 @@
     <div id="screen-result" class="screen">
         <h1>🎉 任務完成！</h1>
         <div class="card">
-            <h2 id="result-team" style="color: var(--primary); margin-bottom: 5px;"></h2>
-            <div id="result-team-count" style="color: #FFD700; font-weight: bold; font-size: 18px; margin-bottom: 15px;"></div>
+            <h2 id="result-team" style="color: var(--primary); margin-bottom: 15px;"></h2>
             <p id="result-stats" style="color: white; font-size: 18px; margin: 15px 0;"></p>
             <hr style="border-color: #444;">
             <p style="color: #FFD700; font-weight: bold; margin-top: 15px;">【最終任務】</p>
@@ -113,8 +127,6 @@
 
     const COLOR_PRIMARY = "#33CC80"; 
     const COLOR_DANGER  = "#FF4D4D"; 
-
-    let membersPerGroup = 8; 
 
     const CHORDS_DB = {
         "C": { frets: {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0}, hint: "線索：去找穿著藍色社服的學長！" },
@@ -144,31 +156,35 @@
         }
     }
 
-    // 向伺服器請求分配小隊
     async function assignTeam() {
-        const btn = document.querySelector('#screen-start .btn');
+        const btn = document.getElementById('btn-draw');
+        const warningEl = document.getElementById('full-warning');
+        
         btn.innerText = "連線分配中...";
         btn.style.pointerEvents = "none";
+        warningEl.style.display = 'none';
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/assign-team`);
             const data = await response.json();
 
             if (!response.ok) {
-                alert(data.error || "所有小隊皆已額滿！");
+                // 在頁面上顯示額滿提示並禁用按鈕
+                warningEl.innerText = `⚠️ ${data.error || "所有小隊人數已達上限，無法繼續報到！"}`;
+                warningEl.style.display = 'block';
+
+                btn.innerText = "報到名額已滿";
+                btn.className = "btn btn-disabled";
                 return;
             }
 
             myTeam = data.team;
-            membersPerGroup = data.membersPerGroup;
 
             document.getElementById('display-team').innerText = myTeam;
-            document.getElementById('display-count').innerText = `(目標人數：${membersPerGroup} 人 / 你是本組第 ${data.currentCount} 位報到者)`;
-            document.getElementById('ready-label').innerText = `我們 ${membersPerGroup} 人已經全部到齊`;
+            document.getElementById('display-count').innerText = `🎉 你是本組第 ${data.currentCount} 位報到的隊員！`;
             switchScreen('screen-team');
         } catch (error) {
             alert("無法連線至分組伺服器！請確認網址設定正確且 Render 伺服器已啟動。");
-        } finally {
             btn.innerText = "點我抽取分組";
             btn.style.pointerEvents = "auto";
         }
@@ -254,7 +270,6 @@
         let timeStr = mins > 0 ? `${mins} 分 ${secs} 秒` : `${secs} 秒`;
         
         document.getElementById('result-team').innerText = `【 ${myTeam} 】`;
-        document.getElementById('result-team-count').innerText = `小隊編制人數：${membersPerGroup} 人`;
         document.getElementById('result-stats').innerHTML = `
             總花費時間: <span style="color:${COLOR_PRIMARY}">${timeStr}</span><br><br>
             答錯次數: <span style="color:${COLOR_DANGER}">${wrongAttempts}</span> 次
