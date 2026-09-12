@@ -50,7 +50,7 @@
         .btn:active { transform: scale(0.97); opacity: 0.9; }
         .btn-green { background-color: var(--primary); color: #051a10; }
         .btn-gray { background-color: #3a3d4d; color: #888d9e; }
-        .btn-disabled { background-color: #2a2c38; color: #66697a; opacity: 0.7; cursor: not-allowed; box-shadow: none; }
+        .btn-disabled { background-color: #2a2c38; color: #66697a; opacity: 0.7; cursor: not-allowed; box-shadow: none; pointer-events: none; }
 
         .card { 
             background-color: var(--card-bg); 
@@ -68,7 +68,6 @@
         }
         .team-count { font-size: 16px; color: var(--warning); margin-bottom: 10px; font-weight: bold; text-align: center; }
         
-        /* 🎯 當前題目專屬卡片 */
         .target-card {
             background: linear-gradient(135deg, #1e2538 0%, #171b29 100%);
             border: 2px solid var(--accent);
@@ -193,7 +192,7 @@
         </div>
     </div>
 
-    <!-- 畫面 2.5: 方案一中途加入觀戰等待畫面 -->
+    <!-- 畫面 2.5: 中途加入觀戰等待畫面 -->
     <div id="screen-spectate" class="screen">
         <div class="content-container">
             <div style="margin: auto 0;">
@@ -219,7 +218,6 @@
     <!-- 畫面 3: 遊戲畫面 -->
     <div id="screen-game" class="screen">
         <div class="content-container">
-            <!-- 頂部小隊資訊列 -->
             <div class="game-header">
                 <span id="game-team-name" style="color: var(--primary);"></span>
                 <span id="level-progress-badge" class="level-progress-badge">關卡 1 / 7</span>
@@ -228,7 +226,6 @@
                 </span>
             </div>
 
-            <!-- 固定顯示：當前目標題目卡片 -->
             <div class="target-card">
                 <div class="target-header">
                     <span class="target-title-label">🎯 當前任務目標</span>
@@ -237,7 +234,6 @@
                 <div id="target-chord-display" class="target-chord-display">-- 和弦</div>
             </div>
 
-            <!-- 動態狀態提示與實體線索卡片 -->
             <div class="card" style="padding: 10px; margin: 0 0 6px 0;">
                 <div id="status-text">準備中...</div>
                 <div id="hint-container" class="hint-container">
@@ -245,13 +241,11 @@
                 </div>
             </div>
             
-            <!-- 指板互動區 -->
             <div class="canvas-container">
                 <div class="canvas-instruction">👇 點擊下方指板按鍵 ( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                 <canvas id="fretboardCanvas"></canvas>
             </div>
             
-            <!-- 操作按鈕區 -->
             <div style="display: flex; gap: 8px;">
                 <button class="btn btn-green" id="btn-check" onclick="handleButtonClick()" style="margin-top:0; flex: 1.2;">送出答案驗證</button>
                 <button class="btn btn-gray btn-disabled" id="btn-next" onclick="nextQuestion()" style="margin-top:0; flex: 1;">前往下一關 ➔</button>
@@ -324,13 +318,10 @@
     let totalPlayers = 1;
 
     let pollInterval = null;
-    
-    // 🔥 方案一：紀錄中途加入時，必須等到哪一關才能正式切入
     let spectateUntilLevel = null; 
 
     function getModeObject(index) {
         let rawMode = (levelModes && levelModes[index]) ? levelModes[index] : null;
-
         if (rawMode && typeof rawMode === 'object') {
             let type = rawMode.type || 'lock';
             let name = rawMode.name || getModeNameByType(type);
@@ -401,7 +392,6 @@
     function startPolling() {
         fetchStatus();
         if (!pollInterval) {
-            // 🔥 超高速同步：縮短為 500ms (0.5秒)
             pollInterval = setInterval(fetchStatus, 500);
         }
     }
@@ -436,23 +426,18 @@
 
                 let serverLevel = data.teamData.currentLevelIndex || 0;
 
-                // 🌟 方案一：判定是否為中途加入者
                 if (spectateUntilLevel === null && data.teamData.isStarted && 
                     document.getElementById('screen-team').classList.contains('active')) {
-                    
-                    // 中途加入：鎖定在 serverLevel + 1 才能加入遊戲
                     spectateUntilLevel = serverLevel + 1;
                     switchScreen('screen-spectate');
                 }
 
-                // 觀戰中狀態處置
                 if (spectateUntilLevel !== null) {
                     if (serverLevel < spectateUntilLevel) {
                         document.getElementById('spectate-status-msg').innerHTML = 
                             `隊友目前正進行 <strong style="color:var(--warning); font-size:18px;">第 ${serverLevel + 1} 關</strong><br>請先尋找同組夥伴會合！`;
-                        return; // 還沒到下一關，保持在觀戰畫面
+                        return;
                     } else {
-                        // 隊友已經解開該關卡，邁入下一關！解鎖並讓新玩家進入遊戲
                         spectateUntilLevel = null;
                         document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
                         currentLevelIndex = serverLevel;
@@ -461,7 +446,6 @@
                     }
                 }
 
-                // 正常同隊同步跳轉機制
                 if (data.teamData.isStarted && 
                     document.getElementById('screen-team').classList.contains('active')) {
                     document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
@@ -603,11 +587,18 @@
                 isAnswered = true;
             }
         } else if (mode === 'ensemble' || mode === 'boss') {
-            userInput = Object.assign({}, teamData.ensembleFrets || {});
+            // 合併伺服器端全組琴弦按法
+            if (teamData.ensembleFrets) {
+                for (let s = 1; s <= 6; s++) {
+                    if (teamData.ensembleFrets[s] !== undefined) {
+                        userInput[s] = teamData.ensembleFrets[s];
+                    }
+                }
+            }
             drawFretboard();
 
             let ensembleDone = teamData.ensembleDone || {};
-            let doneCount = Object.values(ensembleDone).filter(v => v === true).length;
+            let doneCount = Object.keys(ensembleDone).filter(k => ensembleDone[k] === true).length;
             let myDone = ensembleDone[playerId] || false;
 
             let targetChord = myTeamChords[currentLevelIndex];
@@ -617,7 +608,6 @@
                 if (userInput[i] !== correct[i]) isCorrect = false;
             }
 
-            // 只有當「最後一名組員按下完成」時才做全隊核對
             if (doneCount >= totalPlayers && totalPlayers > 0) {
                 if (isCorrect) {
                     statusText.innerText = `🎉 終極大合奏成功！全員完美合奏出 ${targetChord} 和弦！`;
@@ -625,22 +615,22 @@
                     btnNext.className = "btn btn-green";
                     btnNext.innerText = "前往下一關 ➔";
                     btnCheck.className = "btn btn-gray btn-disabled";
-                    btnCheck.innerText = "✅ 全員已確認完畢";
+                    btnCheck.innerText = "✅ 全員合奏通過";
                     isAnswered = true;
                 } else {
-                    statusText.innerText = `❌ 全員已按下完成，但組合出的和弦有誤 (${doneCount}/${totalPlayers})！請調整按法後重新確認。`;
+                    statusText.innerText = `❌ 全員已按下完成，但組合出的和弦有誤 (${doneCount}/${totalPlayers})！請大家調整按法。`;
                     statusText.style.color = COLOR_DANGER;
                     btnCheck.className = "btn btn-green";
-                    btnCheck.innerText = "重新點擊確認完成";
+                    btnCheck.innerText = "🔄 我已修正按法，點我重新確認";
                 }
             } else {
                 if (myDone) {
-                    statusText.innerText = `✅ 你已點擊完成！等待隊友按下完成中 (${doneCount}/${totalPlayers})`;
+                    statusText.innerText = `✅ 你已點擊完成！等待隊友中 (${doneCount}/${totalPlayers})`;
                     statusText.style.color = "var(--warning)";
                     btnCheck.className = "btn btn-gray btn-disabled";
-                    btnCheck.innerText = "⏳ 等待其他隊員按下完成...";
+                    btnCheck.innerText = "⏳ 已確認，等待隊友...";
                 } else {
-                    statusText.innerText = `🎸 合奏分工中：你負責按壓第 [ ${assignedStrings.join(', ')} ] 弦 (進度: ${doneCount}/${totalPlayers})`;
+                    statusText.innerText = `🎸 合奏分工中：你負責按壓第 [ ${assignedStrings.join(', ')} ] 弦 (已完成: ${doneCount}/${totalPlayers})`;
                     statusText.style.color = "var(--accent)";
                     btnCheck.className = "btn btn-green";
                     btnCheck.innerText = "✅ 我已按好，點我確認完成";
@@ -678,6 +668,8 @@
             if (userInput[i] !== correct[i]) isCorrect = false;
         }
 
+        let btnCheck = document.getElementById('btn-check');
+
         if (mode === 'lock') {
             if (isCorrect) {
                 await fetch(`${API_BASE_URL}/api/action`, {
@@ -705,10 +697,18 @@
                 document.getElementById('status-text').style.color = COLOR_DANGER;
             }
         } else if (mode === 'ensemble' || mode === 'boss') {
-            await fetch(`${API_BASE_URL}/api/action`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_submit', data: { isCorrect } })
-            });
+            // 🔥 立即顯示按鈕傳送中視覺樣式
+            btnCheck.className = "btn btn-gray btn-disabled";
+            btnCheck.innerText = "⏳ 傳送確認中...";
+
+            try {
+                await fetch(`${API_BASE_URL}/api/action`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_submit' })
+                });
+            } catch(e) {
+                console.error("提交失敗", e);
+            }
             fetchStatus();
         }
     }
@@ -769,7 +769,6 @@
         switchScreen('screen-result');
     }
 
-    // 指板繪製與點擊控制
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -796,7 +795,6 @@
         let fretW = w / 3;
         let stringH = h / 5;
 
-        // 琴枕與琴格
         ctx.fillStyle = '#E6E6D8'; ctx.fillRect(padX - 8, padY - 5, 10, h + 10);
         ctx.strokeStyle = '#606478'; ctx.lineWidth = 2;
         for (let i = 1; i <= 3; i++) {
@@ -825,7 +823,6 @@
             let y = padY + (stringNum - 1) * stringH;
             
             if (fretVal === -1) {
-                // 🔴 不彈 / 悶音
                 ctx.strokeStyle = COLOR_DANGER; ctx.lineWidth = 3;
                 let cx = padX - 22;
                 ctx.beginPath();
@@ -833,12 +830,10 @@
                 ctx.moveTo(cx - 5, y + 5); ctx.lineTo(cx + 5, y - 5);
                 ctx.stroke();
             } else if (fretVal === 0) {
-                // ⭕ 空弦音
                 ctx.strokeStyle = COLOR_PRIMARY; ctx.lineWidth = 3;
                 let cx = padX - 22;
                 ctx.beginPath(); ctx.arc(cx, y, 6, 0, Math.PI * 2); ctx.stroke();
             } else {
-                // 🟢 按琴格
                 let cx = padX + (fretVal - 0.5) * fretW;
                 ctx.fillStyle = COLOR_PRIMARY; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(cx, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -902,10 +897,16 @@
         userInput[clickedString] = (userInput[clickedString] === clickedFret) ? -1 : clickedFret;
         drawFretboard();
 
+        // 🔥 只傳送自己負責的琴弦按法，不覆蓋隊友
         if (mode === 'ensemble' || mode === 'boss') {
+            let myFrets = {};
+            assignedStrings.forEach(s => {
+                myFrets[s] = userInput[s];
+            });
+
             await fetch(`${API_BASE_URL}/api/action`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_update', data: { frets: userInput } })
+                body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_update', data: { frets: myFrets } })
             });
             fetchStatus();
         }
