@@ -36,11 +36,10 @@
         .team-name { font-size: 40px; font-weight: bold; color: var(--primary); margin: 10px 0; }
         .team-count { font-size: 20px; color: #FFD700; margin-bottom: 20px; font-weight: bold; }
         
-        canvas { background-color: var(--card-bg); border-radius: 15px; width: 100%; max-height: 50vh; touch-action: none; }
+        canvas { background-color: var(--card-bg); border-radius: 15px; width: 100%; height: 45vh; touch-action: none; }
         #status-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
         .hint-text { font-size: 15px; color: #FFD700; margin-top: 8px; font-weight: bold; }
         
-        /* 自訂輸入框與核取方塊樣式 */
         .input-group {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             margin: 15px 0; gap: 8px;
@@ -61,7 +60,7 @@
 </head>
 <body>
 
-    <!-- 畫面 1: 首頁 (新增總人數自訂輸入) -->
+    <!-- 畫面 1: 首頁 -->
     <div id="screen-start" class="screen active">
         <h1>🎸 吉他社迎新解謎大冒險</h1>
         <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
@@ -114,7 +113,7 @@
         </div>
     </div>
 
-    <!-- 畫面 4: 結算畫面 (顯示組別與組別人數) -->
+    <!-- 畫面 4: 結算畫面 -->
     <div id="screen-result" class="screen">
         <h1>🎉 任務完成！</h1>
         <div class="card">
@@ -128,16 +127,12 @@
     </div>
 
 <script>
-    // ==========================================
-    // ⚙️ 顏色定義與英文組別設定
-    // ==========================================
-    const COLOR_PRIMARY = "#33CC80"; // 成功/正確綠色
-    const COLOR_DANGER  = "#FF4D4D"; // 錯誤/叉叉紅色
-    const TEAM_NAMES = ["Group A", "Group B", "Group C", "Group D", "Group E"]; // 英文組別
+    const COLOR_PRIMARY = "#33CC80"; 
+    const COLOR_DANGER  = "#FF4D4D"; 
+    const TEAM_NAMES = ["Group A", "Group B", "Group C", "Group D", "Group E"]; 
 
-    let membersPerGroup = 8; // 動態計算出的每組人數
+    let membersPerGroup = 8; 
 
-    // 和弦與線索設定
     const CHORDS_DB = {
         "C": { frets: {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0}, hint: "線索：去找穿著藍色社服的學長！" },
         "D": { frets: {6: -1, 5: -1, 4: 0, 3: 2, 2: 3, 1: 2}, hint: "線索：答案藏在司令台右側的階梯旁。" },
@@ -148,7 +143,6 @@
         "Fm": { frets: {6: 1, 5: 3, 4: 3, 3: 1, 2: 1, 1: 1}, hint: "線索：籃球場旁邊的佈告欄。" },
         "C7": { frets: {6: -1, 5: 3, 4: 2, 3: 3, 2: 1, 1: 0}, hint: "線索：找尋身上背著木箱鼓的關主。" }
     };
-    // ==========================================
 
     let myTeam = "";
     let remainingChords = [];
@@ -162,15 +156,15 @@
     function switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
-        if(screenId === 'screen-game') initCanvas();
+        if(screenId === 'screen-game') {
+            setTimeout(initCanvas, 50); // 確保 DOM 渲染完畢後再計算精確尺寸
+        }
     }
 
-    // 隨機分組邏輯 (依據輸入的總人數動態計算)
     function assignTeam() {
         const inputVal = parseInt(document.getElementById('input-total-players').value);
         const totalPlayers = isNaN(inputVal) || inputVal < 1 ? 40 : inputVal;
         
-        // 自動計算每組應到人數 (無條件進位)
         membersPerGroup = Math.ceil(totalPlayers / TEAM_NAMES.length);
 
         myTeam = TEAM_NAMES[Math.floor(Math.random() * TEAM_NAMES.length)];
@@ -180,7 +174,6 @@
         switchScreen('screen-team');
     }
 
-    // 核取方塊改變時，啟用開始按鈕
     function toggleStartButton() {
         let isChecked = document.getElementById('team-ready-checkbox').checked;
         let btn = document.getElementById('btn-start-game');
@@ -269,15 +262,23 @@
         switchScreen('screen-result');
     }
 
-    // --- HTML Canvas 指板繪製與互動邏輯 ---
+    // --- 觸控修正後的 HTML Canvas 邏輯 ---
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
     function initCanvas() {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = window.innerHeight * 0.45;
+        let rect = canvas.getBoundingClientRect();
+        // 將 canvas 畫布解析度同步為實際 CSS 顯示尺寸
+        canvas.width = rect.width;
+        canvas.height = rect.height;
         drawFretboard();
     }
+
+    window.addEventListener('resize', () => {
+        if (document.getElementById('screen-game').classList.contains('active')) {
+            initCanvas();
+        }
+    });
 
     function drawFretboard() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -301,7 +302,7 @@
             ctx.stroke();
         }
 
-        // 畫弦 (Strings) 1弦(e)在最上面, 6弦(E)在最下面
+        // 畫弦 (Strings)
         const stringNames = {1: 'e', 2: 'B', 3: 'G', 4: 'D', 5: 'A', 6: 'E'};
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let y = padY + (stringNum - 1) * stringH; 
@@ -318,13 +319,12 @@
             ctx.fillText(stringNames[stringNum], 15, y + 6);
         }
 
-        // 畫使用者輸入的點 (修正色碼顯示)
+        // 畫使用者點擊圖示
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
             
             if (fretVal === -1) {
-                // 畫紅色粗叉叉
                 ctx.strokeStyle = COLOR_DANGER;
                 ctx.lineWidth = 4;
                 let cx = padX - 30;
@@ -333,7 +333,6 @@
                 ctx.moveTo(cx - 8, y + 8); ctx.lineTo(cx + 8, y - 8);
                 ctx.stroke();
             } else if (fretVal === 0) {
-                // 畫綠色空弦圈圈
                 ctx.strokeStyle = COLOR_PRIMARY;
                 ctx.lineWidth = 4;
                 let cx = padX - 30;
@@ -341,9 +340,7 @@
                 ctx.arc(cx, y, 8, 0, Math.PI * 2);
                 ctx.stroke();
             } else {
-                // 畫按壓點 (實心綠色大圓點 + 白邊)
                 let cx = padX + (fretVal - 0.5) * fretW;
-                
                 ctx.fillStyle = COLOR_PRIMARY;
                 ctx.strokeStyle = '#FFFFFF';
                 ctx.lineWidth = 2;
@@ -355,13 +352,18 @@
         }
     }
 
-    // 處理點擊/觸控事件
+    // 處理點擊/觸控事件 (加入 scale 縮放率轉換)
     canvas.addEventListener('pointerdown', (e) => {
         if(isAnswered) return; 
         
         let rect = canvas.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
+        
+        // 計算實際像素與顯示尺寸的比例 (修正手機觸控偏移的關鍵)
+        let scaleX = canvas.width / rect.width;
+        let scaleY = canvas.height / rect.height;
+        
+        let x = (e.clientX - rect.left) * scaleX;
+        let y = (e.clientY - rect.top) * scaleY;
         
         let padX = 50, padY = 30;
         let w = canvas.width - padX * 2;
@@ -369,7 +371,7 @@
         let fretW = w / 4;
         let stringH = h / 5;
 
-        // 判斷點擊的是哪一弦
+        // 判斷點擊哪一弦
         let clickedString = null;
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let strY = padY + (stringNum - 1) * stringH;
@@ -380,7 +382,7 @@
         }
         if (!clickedString) return;
 
-        // 判斷點擊的是哪一格
+        // 判斷點擊哪一格
         let clickedFret = -1;
         if (x < padX) {
             clickedFret = 0; 
