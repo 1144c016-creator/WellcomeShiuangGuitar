@@ -46,19 +46,7 @@
         }
         .checkbox-container input { width: 22px; height: 22px; }
 
-        .warning-box {
-            background-color: rgba(255, 77, 77, 0.15);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            padding: 14px 18px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 20px;
-            line-height: 1.4;
-        }
-
-        /* 呼吸燈效果，提示正在即時更新 */
+        /* 呼吸燈效果，提示即時更新 */
         .live-dot {
             display: inline-block;
             width: 10px;
@@ -82,9 +70,6 @@
         <h1>🎸 吉他社迎新解謎大冒險</h1>
         <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
         
-        <!-- 額滿提示區塊 (預設隱藏) -->
-        <div id="full-warning" class="warning-box" style="display: none;"></div>
-
         <div style="flex-grow: 1;"></div>
         <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">點我抽取分組</button>
     </div>
@@ -166,7 +151,7 @@
     let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1}; 
     let startTime = 0;
     let wrongAttempts = 0;
-    let pollInterval = null; // 即時更新定時器
+    let pollInterval = null;
     const totalQuestions = Object.keys(CHORDS_DB).length;
 
     function switchScreen(screenId) {
@@ -179,30 +164,25 @@
 
     async function assignTeam() {
         const btn = document.getElementById('btn-draw');
-        const warningEl = document.getElementById('full-warning');
-        
         btn.innerText = "連線分配中...";
         btn.style.pointerEvents = "none";
-        warningEl.style.display = 'none';
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/assign-team`);
             const data = await response.json();
 
             if (!response.ok) {
-                warningEl.innerText = `⚠️ ${data.error || "所有小隊人數已達上限，無法繼續報到！"}`;
-                warningEl.style.display = 'block';
-                btn.innerText = "報到名額已滿";
-                btn.className = "btn btn-disabled";
+                alert("伺服器回應錯誤，請重新試試看。");
+                btn.innerText = "點我抽取分組";
+                btn.style.pointerEvents = "auto";
                 return;
             }
 
             myTeam = data.team;
-
             document.getElementById('display-team').innerText = myTeam;
             switchScreen('screen-team');
 
-            // 進入分組頁面後，啟動即時人數更新 (每 3 秒查詢一次)
+            // 啟動即時人數更新 (每 3 秒查詢一次)
             startTeamStatusPolling();
 
         } catch (error) {
@@ -212,13 +192,11 @@
         }
     }
 
-    // 啟動即時人數輪詢
     function startTeamStatusPolling() {
-        fetchTeamStatus(); // 先立即查詢一次
-        pollInterval = setInterval(fetchTeamStatus, 3000); // 之後每 3 秒自動更新
+        fetchTeamStatus();
+        pollInterval = setInterval(fetchTeamStatus, 3000);
     }
 
-    // 向伺服器查詢最新人數並更新 UI
     async function fetchTeamStatus() {
         if (!myTeam) return;
         try {
@@ -247,7 +225,6 @@
     function startGame() {
         if (!document.getElementById('team-ready-checkbox').checked) return;
         
-        // 進入遊戲後，停止即時人數查詢以節省網路資源
         if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
