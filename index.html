@@ -157,7 +157,7 @@
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
         if(screenId === 'screen-game') {
-            setTimeout(initCanvas, 50); // 確保 DOM 渲染完畢後再計算精確尺寸
+            setTimeout(initCanvas, 50); 
         }
     }
 
@@ -262,13 +262,12 @@
         switchScreen('screen-result');
     }
 
-    // --- 觸控修正後的 HTML Canvas 邏輯 ---
+    // --- HTML Canvas 邏輯 (改為 3 格指板) ---
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
     function initCanvas() {
         let rect = canvas.getBoundingClientRect();
-        // 將 canvas 畫布解析度同步為實際 CSS 顯示尺寸
         canvas.width = rect.width;
         canvas.height = rect.height;
         drawFretboard();
@@ -285,17 +284,17 @@
         let padX = 50, padY = 30;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
-        let fretW = w / 4;
+        let fretW = w / 3; // 改為 3 格
         let stringH = h / 5;
 
         // 畫琴枕 (Nut)
         ctx.fillStyle = '#DDDDCC';
         ctx.fillRect(padX - 8, padY - 5, 12, h + 10);
 
-        // 畫琴桁 (Frets)
+        // 畫琴桁 (Frets) - 畫出 3 格的邊線
         ctx.strokeStyle = '#888888';
         ctx.lineWidth = 3;
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 3; i++) {
             ctx.beginPath();
             ctx.moveTo(padX + i * fretW, padY);
             ctx.lineTo(padX + i * fretW, padY + h);
@@ -352,13 +351,12 @@
         }
     }
 
-    // 處理點擊/觸控事件 (加入 scale 縮放率轉換)
+    // 處理點擊/觸控事件 (改為 3 格判定)
     canvas.addEventListener('pointerdown', (e) => {
         if(isAnswered) return; 
         
         let rect = canvas.getBoundingClientRect();
         
-        // 計算實際像素與顯示尺寸的比例 (修正手機觸控偏移的關鍵)
         let scaleX = canvas.width / rect.width;
         let scaleY = canvas.height / rect.height;
         
@@ -368,7 +366,7 @@
         let padX = 50, padY = 30;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
-        let fretW = w / 4;
+        let fretW = w / 3; // 改為 3 格
         let stringH = h / 5;
 
         // 判斷點擊哪一弦
@@ -382,12 +380,12 @@
         }
         if (!clickedString) return;
 
-        // 判斷點擊哪一格
+        // 判斷點擊哪一格 (最多判定至第 3 格)
         let clickedFret = -1;
         if (x < padX) {
             clickedFret = 0; 
         } else {
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 3; i++) {
                 if (x >= padX + (i-1)*fretW && x <= padX + i*fretW) {
                     clickedFret = i;
                     break;
