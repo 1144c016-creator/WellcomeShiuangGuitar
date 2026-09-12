@@ -28,9 +28,9 @@
         .screen {
             display: none;
             flex-direction: column;
-            justify-content: center; /* 內容垂直置中 */
+            justify-content: center;
             align-items: center;
-            height: 100dvh; /* 動態視窗高度 */
+            height: 100dvh;
             width: 100%;
             padding: calc(15px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
             text-align: center;
@@ -66,7 +66,6 @@
         .team-name { font-size: 38px; font-weight: bold; color: var(--primary); margin: 8px 0; }
         .team-count { font-size: 18px; color: #FFD700; margin-bottom: 15px; font-weight: bold; }
         
-        /* 遊戲畫面的頂部小隊資訊列 */
         .game-header {
             display: flex;
             justify-content: space-between;
@@ -76,7 +75,6 @@
             font-weight: bold;
         }
 
-        /* 畫布彈性區塊 */
         .canvas-container {
             flex: 1;
             width: 100%;
@@ -156,8 +154,6 @@
     <!-- 畫面 3: 遊戲畫面 -->
     <div id="screen-game" class="screen">
         <div class="content-container">
-            
-            <!-- 頂部即時小隊狀態列 -->
             <div class="game-header">
                 <span id="game-team-name" style="color: var(--primary); font-size: 16px;"></span>
                 <span id="game-team-count" style="color: #FFD700; font-size: 14px;">
@@ -216,6 +212,7 @@
     };
 
     let myTeam = "";
+    let myTeamChords = []; // 儲存從後端取得的該組專屬題目順序
     let remainingChords = [];
     let targetChord = "";
     let isAnswered = false;
@@ -250,6 +247,8 @@
             }
 
             myTeam = data.team;
+            myTeamChords = data.chords || Object.keys(CHORDS_DB); // 接收該組專屬題目順序
+            
             document.getElementById('display-team').innerText = myTeam;
             switchScreen('screen-team');
 
@@ -277,14 +276,12 @@
             if (data.teamCounts && data.teamCounts[myTeam] !== undefined) {
                 const count = data.teamCounts[myTeam];
                 
-                // 更新畫面2（等待集合畫面）的人數
                 const displayCountEl = document.getElementById('display-count');
                 if (displayCountEl) {
                     displayCountEl.innerHTML = 
                         `<span class="live-dot"></span>本組目前簽到：<strong style="font-size: 24px;">${count}</strong> 人`;
                 }
                 
-                // 同步更新畫面3（遊戲闖關畫面）頂部的人數
                 const gameCountEl = document.getElementById('game-team-count');
                 if (gameCountEl) {
                     gameCountEl.innerHTML = 
@@ -309,13 +306,11 @@
     function startGame() {
         if (!document.getElementById('team-ready-checkbox').checked) return;
         
-        // 設定遊戲畫面的頂部隊名
         document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
-        
-        // 進入遊戲時立即刷新一次最新人數（繼續維持背景輪詢）
         fetchTeamStatus();
 
-        remainingChords = Object.keys(CHORDS_DB).sort(() => Math.random() - 0.5); 
+        // 關鍵修改：使用該組專屬題目順序，不再在單一手機上隨機亂序
+        remainingChords = [...myTeamChords]; 
         wrongAttempts = 0;
         startTime = Date.now();
         loadQuestion();
@@ -377,7 +372,6 @@
     }
 
     function showResult() {
-        // 全員破關到達結算畫面，停止背景輪詢
         if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
