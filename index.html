@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>吉他社迎新解謎大冒險</title>
     <style>
         :root {
@@ -14,47 +14,88 @@
             --text-sub: #AAAAAA;
         }
         * { box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif; user-select: none; }
-        body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
-        .screen { display: none; flex-direction: column; height: 100vh; padding: 30px 20px; text-align: center; }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center; /* 將內容垂直置中於可視區域 */
+            align-items: center;
+            height: 100dvh; /* 使用動態視窗高度，避開手機瀏覽器工具列 */
+            width: 100%;
+            padding: calc(20px + env(safe-area-inset-top)) 20px calc(25px + env(safe-area-inset-bottom)) 20px;
+            text-align: center;
+        }
+        
         .active { display: flex; }
         
-        h1 { font-size: 28px; margin-bottom: 10px; color: var(--primary); }
-        h2 { font-size: 24px; margin: 10px 0; }
-        p { font-size: 16px; color: var(--text-sub); line-height: 1.5; }
+        .content-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        h1 { font-size: 26px; margin: 0 0 10px 0; color: var(--primary); }
+        h2 { font-size: 22px; margin: 10px 0; }
+        p { font-size: 15px; color: var(--text-sub); line-height: 1.5; margin: 8px 0; }
         
         .btn {
             background-color: #3b82f6; color: white; border: none; border-radius: 12px;
-            padding: 15px 20px; font-size: 18px; font-weight: bold; width: 100%;
+            padding: 16px 20px; font-size: 18px; font-weight: bold; width: 100%;
             margin-top: 15px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
         .btn-green { background-color: var(--primary); color: #000; }
         .btn-gray { background-color: #555; }
         .btn-disabled { background-color: #333; color: #777; pointer-events: none; }
 
         .card { background-color: var(--card-bg); border-radius: 15px; padding: 20px; margin: 15px 0; }
-        .team-name { font-size: 40px; font-weight: bold; color: var(--primary); margin: 10px 0; }
-        .team-count { font-size: 20px; color: #FFD700; margin-bottom: 20px; font-weight: bold; }
+        .team-name { font-size: 38px; font-weight: bold; color: var(--primary); margin: 8px 0; }
+        .team-count { font-size: 18px; color: #FFD700; margin-bottom: 15px; font-weight: bold; }
         
-        canvas { background-color: var(--card-bg); border-radius: 15px; width: 100%; height: 45vh; touch-action: none; }
-        #status-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        .hint-text { font-size: 15px; color: #FFD700; margin-top: 8px; font-weight: bold; }
+        /* 讓畫布自動填滿中間彈性區域，確保不擠壓按鈕 */
+        .canvas-container {
+            flex: 1;
+            width: 100%;
+            min-height: 200px;
+            max-height: 400px;
+            margin: 10px 0;
+            position: relative;
+        }
+        canvas {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        #status-text { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .hint-text { font-size: 14px; color: #FFD700; margin-top: 5px; font-weight: bold; }
         
         .checkbox-container {
             display: flex; align-items: center; justify-content: center;
-            margin-top: 20px; gap: 10px; font-size: 18px; color: white; font-weight: bold;
+            margin: 15px 0; gap: 10px; font-size: 16px; color: white; font-weight: bold;
         }
         .checkbox-container input { width: 22px; height: 22px; }
 
-        /* 呼吸燈效果，提示即時更新 */
         .live-dot {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            background-color: #33CC80;
-            border-radius: 50%;
-            margin-right: 6px;
-            animation: pulse 1.5s infinite;
+            display: inline-block; width: 10px; height: 10px;
+            background-color: #33CC80; border-radius: 50%;
+            margin-right: 6px; animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.7; }
@@ -67,62 +108,73 @@
 
     <!-- 畫面 1: 首頁 -->
     <div id="screen-start" class="screen active">
-        <h1>🎸 吉他社迎新解謎大冒險</h1>
-        <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
-        
-        <div style="flex-grow: 1;"></div>
-        <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">點我抽取分組</button>
+        <div class="content-container">
+            <div style="margin: auto 0;">
+                <h1>🎸 吉他社迎新解謎大冒險</h1>
+                <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
+            </div>
+            <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">點我抽取分組</button>
+        </div>
     </div>
 
     <!-- 畫面 2: 分組結果與人數確認 -->
     <div id="screen-team" class="screen">
-        <h1>你的專屬小隊是</h1>
-        <div class="team-name" id="display-team"></div>
-        
-        <!-- 即時人數顯示區 -->
-        <div class="team-count" id="display-count">
-            <span class="live-dot"></span>已簽到隊員：更新中...
+        <div class="content-container">
+            <div style="margin: auto 0;">
+                <h1>你的專屬小隊是</h1>
+                <div class="team-name" id="display-team"></div>
+                
+                <div class="team-count" id="display-count">
+                    <span class="live-dot"></span>已簽到隊員：更新中...
+                </div>
+                
+                <div class="card">
+                    <p style="color: white; font-weight: bold; font-size: 17px; margin-bottom: 5px;">【第一步任務】</p>
+                    <p style="color: #FFD700; margin: 5px 0;">請先截圖保存此畫面！</p>
+                    <p>現在請在活動場地內尋找與你同組的隊員。全員集合完畢後，勾選下方確認，才能開始解謎。</p>
+                </div>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" id="team-ready-checkbox" onchange="toggleStartButton()">
+                    <label for="team-ready-checkbox" id="ready-label">我們全組隊員已集合完畢</label>
+                </div>
+            </div>
+            <button class="btn btn-disabled" id="btn-start-game" onclick="startGame()">進入關卡！</button>
         </div>
-        
-        <div class="card">
-            <p style="color: white; font-weight: bold; font-size: 18px;">【第一步任務】</p>
-            <p style="color: #FFD700;">請先截圖保存此畫面！</p>
-            <p>現在請在活動場地內尋找與你同組的隊員。全員集合完畢後，勾選下方確認，才能開始解謎。</p>
-        </div>
-        
-        <div class="checkbox-container">
-            <input type="checkbox" id="team-ready-checkbox" onchange="toggleStartButton()">
-            <label for="team-ready-checkbox" id="ready-label">我們全組隊員已集合完畢</label>
-        </div>
-        
-        <div style="flex-grow: 1;"></div>
-        <button class="btn btn-disabled" id="btn-start-game" onclick="startGame()">進入關卡！</button>
     </div>
 
     <!-- 畫面 3: 遊戲畫面 -->
     <div id="screen-game" class="screen">
-        <div class="card" style="padding: 10px;">
-            <div id="status-text">準備中...</div>
-            <div id="hint-text" class="hint-text"></div>
-        </div>
-        
-        <canvas id="fretboardCanvas"></canvas>
-        
-        <div style="display: flex; gap: 10px; margin-top: auto;">
-            <button class="btn" id="btn-check" onclick="checkAnswer()">確認答案</button>
-            <button class="btn btn-gray" id="btn-next" onclick="nextQuestion()">尚未答對</button>
+        <div class="content-container">
+            <div class="card" style="padding: 12px; margin: 0 0 10px 0;">
+                <div id="status-text">準備中...</div>
+                <div id="hint-text" class="hint-text"></div>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="fretboardCanvas"></canvas>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" id="btn-check" onclick="checkAnswer()" style="margin-top:0;">確認答案</button>
+                <button class="btn btn-gray" id="btn-next" onclick="nextQuestion()" style="margin-top:0;">尚未答對</button>
+            </div>
         </div>
     </div>
 
     <!-- 畫面 4: 結算畫面 -->
     <div id="screen-result" class="screen">
-        <h1>🎉 任務完成！</h1>
-        <div class="card">
-            <h2 id="result-team" style="color: var(--primary); margin-bottom: 15px;"></h2>
-            <p id="result-stats" style="color: white; font-size: 18px; margin: 15px 0;"></p>
-            <hr style="border-color: #444;">
-            <p style="color: #FFD700; font-weight: bold; margin-top: 15px;">【最終任務】</p>
-            <p>請保留此畫面，整組帶隊前往「吉他社社辦」找最終關主，核對全員通關畫面即可獲勝！</p>
+        <div class="content-container">
+            <div style="margin: auto 0;">
+                <h1>🎉 任務完成！</h1>
+                <div class="card">
+                    <h2 id="result-team" style="color: var(--primary); margin-bottom: 15px;"></h2>
+                    <p id="result-stats" style="color: white; font-size: 18px; margin: 15px 0;"></p>
+                    <hr style="border-color: #444; margin: 15px 0;">
+                    <p style="color: #FFD700; font-weight: bold; margin-top: 15px;">【最終任務】</p>
+                    <p>請保留此畫面，整組帶隊前往「吉他社社辦」找最終關主，核對全員通關畫面即可獲勝！</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -182,7 +234,6 @@
             document.getElementById('display-team').innerText = myTeam;
             switchScreen('screen-team');
 
-            // 啟動即時人數更新 (每 3 秒查詢一次)
             startTeamStatusPolling();
 
         } catch (error) {
@@ -205,7 +256,7 @@
             if (data.teamCounts && data.teamCounts[myTeam] !== undefined) {
                 const count = data.teamCounts[myTeam];
                 document.getElementById('display-count').innerHTML = 
-                    `<span class="live-dot"></span>本組目前簽到：<strong style="font-size: 26px;">${count}</strong> 人`;
+                    `<span class="live-dot"></span>本組目前簽到：<strong style="font-size: 24px;">${count}</strong> 人`;
             }
         } catch (e) {
             console.log("連線更新失敗，將在下次重試", e);
@@ -323,7 +374,7 @@
 
     function drawFretboard() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let padX = 50, padY = 30;
+        let padX = 45, padY = 25;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
         let fretW = w / 3;
@@ -353,8 +404,8 @@
             ctx.stroke();
 
             ctx.fillStyle = '#DDDDDD';
-            ctx.font = 'bold 18px Arial';
-            ctx.fillText(stringNames[stringNum], 15, y + 6);
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(stringNames[stringNum], 12, y + 5);
         }
 
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
@@ -364,17 +415,17 @@
             if (fretVal === -1) {
                 ctx.strokeStyle = COLOR_DANGER;
                 ctx.lineWidth = 4;
-                let cx = padX - 30;
+                let cx = padX - 26;
                 ctx.beginPath();
-                ctx.moveTo(cx - 8, y - 8); ctx.lineTo(cx + 8, y + 8);
-                ctx.moveTo(cx - 8, y + 8); ctx.lineTo(cx + 8, y - 8);
+                ctx.moveTo(cx - 7, y - 7); ctx.lineTo(cx + 7, y + 7);
+                ctx.moveTo(cx - 7, y + 7); ctx.lineTo(cx + 7, y - 7);
                 ctx.stroke();
             } else if (fretVal === 0) {
                 ctx.strokeStyle = COLOR_PRIMARY;
                 ctx.lineWidth = 4;
-                let cx = padX - 30;
+                let cx = padX - 26;
                 ctx.beginPath();
-                ctx.arc(cx, y, 8, 0, Math.PI * 2);
+                ctx.arc(cx, y, 7, 0, Math.PI * 2);
                 ctx.stroke();
             } else {
                 let cx = padX + (fretVal - 0.5) * fretW;
@@ -382,7 +433,7 @@
                 ctx.strokeStyle = '#FFFFFF';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(cx, y, 14, 0, Math.PI * 2);
+                ctx.arc(cx, y, 13, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
             }
@@ -399,7 +450,7 @@
         let x = (e.clientX - rect.left) * scaleX;
         let y = (e.clientY - rect.top) * scaleY;
         
-        let padX = 50, padY = 30;
+        let padX = 45, padY = 25;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
         let fretW = w / 3;
