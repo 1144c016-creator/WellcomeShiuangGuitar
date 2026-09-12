@@ -40,17 +40,6 @@
         #status-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
         .hint-text { font-size: 15px; color: #FFD700; margin-top: 8px; font-weight: bold; }
         
-        .input-group {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin: 15px 0; gap: 8px;
-        }
-        .input-group label { font-size: 16px; color: #FFF; font-weight: bold; }
-        .input-group input {
-            width: 120px; font-size: 20px; padding: 8px; text-align: center;
-            border-radius: 8px; border: 2px solid var(--primary);
-            background: #14141a; color: #FFF; font-weight: bold;
-        }
-        
         .checkbox-container {
             display: flex; align-items: center; justify-content: center;
             margin-top: 20px; gap: 10px; font-size: 18px; color: white; font-weight: bold;
@@ -64,14 +53,6 @@
     <div id="screen-start" class="screen active">
         <h1>🎸 吉他社迎新解謎大冒險</h1>
         <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
-        
-        <div class="card" style="margin-top: 20px;">
-            <div class="input-group">
-                <label for="input-total-players">設定活動總人數：</label>
-                <input type="number" id="input-total-players" value="40" min="1" max="500">
-            </div>
-            <p style="font-size: 13px; color: #AAA;">(系統將傳送至伺服器即時平均分配各組人數)</p>
-        </div>
         
         <div style="flex-grow: 1;"></div>
         <button class="btn btn-green" onclick="assignTeam()">點我抽取分組</button>
@@ -127,6 +108,7 @@
     </div>
 
 <script>
+    // ⚠️ 請將下方網址替換為你在 Render 複製的公開網址 (結尾不要加斜線 /)
     const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
 
     const COLOR_PRIMARY = "#33CC80"; 
@@ -168,14 +150,15 @@
         btn.innerText = "連線分配中...";
         btn.style.pointerEvents = "none";
 
-        const inputVal = parseInt(document.getElementById('input-total-players').value);
-        const totalPlayers = isNaN(inputVal) || inputVal < 1 ? 40 : inputVal;
-
         try {
-            const response = await fetch(`${API_BASE_URL}/api/assign-team?total=${totalPlayers}`);
-            if (!response.ok) throw new Error("伺服器回應異常");
-
+            const response = await fetch(`${API_BASE_URL}/api/assign-team`);
             const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.error || "所有小隊皆已額滿！");
+                return;
+            }
+
             myTeam = data.team;
             membersPerGroup = data.membersPerGroup;
 
@@ -279,7 +262,6 @@
         switchScreen('screen-result');
     }
 
-    // 3 格 Canvas 指板繪製與點擊計算
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -304,11 +286,9 @@
         let fretW = w / 3;
         let stringH = h / 5;
 
-        // 畫琴枕
         ctx.fillStyle = '#DDDDCC';
         ctx.fillRect(padX - 8, padY - 5, 12, h + 10);
 
-        // 畫 3 格琴桁
         ctx.strokeStyle = '#888888';
         ctx.lineWidth = 3;
         for (let i = 1; i <= 3; i++) {
@@ -318,7 +298,6 @@
             ctx.stroke();
         }
 
-        // 畫 6 條琴弦
         const stringNames = {1: 'e', 2: 'B', 3: 'G', 4: 'D', 5: 'A', 6: 'E'};
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let y = padY + (stringNum - 1) * stringH; 
@@ -335,7 +314,6 @@
             ctx.fillText(stringNames[stringNum], 15, y + 6);
         }
 
-        // 畫點擊結果 (空弦、悶音、按壓位置)
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
@@ -368,7 +346,6 @@
         }
     }
 
-    // 手機/電腦精確觸控座標計算
     canvas.addEventListener('pointerdown', (e) => {
         if(isAnswered) return; 
         
