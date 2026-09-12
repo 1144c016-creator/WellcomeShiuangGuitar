@@ -135,7 +135,7 @@
         .live-dot {
             display: inline-block; width: 8px; height: 8px;
             background-color: #33CC80; border-radius: 50%;
-            margin-right: 5px; animation: pulse 1s infinite;
+            margin-right: 5px; animation: pulse 0.8s infinite;
         }
         @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.7; }
@@ -193,6 +193,29 @@
         </div>
     </div>
 
+    <!-- 畫面 2.5: 方案一中途加入觀戰等待畫面 -->
+    <div id="screen-spectate" class="screen">
+        <div class="content-container">
+            <div style="margin: auto 0;">
+                <div style="font-size: 50px; margin-bottom: 10px;">👀</div>
+                <h1 style="color: var(--accent);">成功加入小隊！</h1>
+                <div class="team-name" id="spectate-team-name">--</div>
+                
+                <div class="card" style="text-align: center; padding: 20px 14px; border: 2px solid var(--accent);">
+                    <p style="color: var(--warning); font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                        <span class="live-dot"></span>隊友解謎進行中
+                    </p>
+                    <p id="spectate-status-msg" style="color: white; font-size: 15px; margin: 6px 0;">
+                        隊友目前正進行第 1 關，請先與隊友會合！
+                    </p>
+                    <p style="color: var(--text-sub); font-size: 13px; margin-top: 12px;">
+                        💡 隊友完成當前關卡後，系統將自動為您切換至【下一關】正式加入合奏！
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 畫面 3: 遊戲畫面 -->
     <div id="screen-game" class="screen">
         <div class="content-container">
@@ -205,7 +228,7 @@
                 </span>
             </div>
 
-            <!-- 🔥 固定顯示：當前目標題目卡片 -->
+            <!-- 固定顯示：當前目標題目卡片 -->
             <div class="target-card">
                 <div class="target-header">
                     <span class="target-title-label">🎯 當前任務目標</span>
@@ -272,7 +295,7 @@
 
 <script>
     // ⚠️ 請務必替換為你的 Render 後端網址 ⚠️
-    const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com/"; 
+    const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
 
     const COLOR_PRIMARY = "#33CC80"; 
     const COLOR_DANGER  = "#FF4D4D"; 
@@ -301,8 +324,10 @@
     let totalPlayers = 1;
 
     let pollInterval = null;
+    
+    // 🔥 方案一：紀錄中途加入時，必須等到哪一關才能正式切入
+    let spectateUntilLevel = null; 
 
-    // 智慧解析關卡模式物件
     function getModeObject(index) {
         let rawMode = (levelModes && levelModes[index]) ? levelModes[index] : null;
 
@@ -361,6 +386,7 @@
             if (data.levelModes && Array.isArray(data.levelModes)) levelModes = data.levelModes;
             
             document.getElementById('display-team').innerText = myTeam;
+            document.getElementById('spectate-team-name').innerText = `【 ${myTeam} 】`;
             switchScreen('screen-team');
 
             startPolling();
@@ -375,8 +401,8 @@
     function startPolling() {
         fetchStatus();
         if (!pollInterval) {
-            // 🔥 將輪詢間隔改為 1000ms (1秒)，讓讀取與團隊同步感極為流暢
-            pollInterval = setInterval(fetchStatus, 1000);
+            // 🔥 超高速同步：縮短為 500ms (0.5秒)
+            pollInterval = setInterval(fetchStatus, 500);
         }
     }
 
@@ -407,8 +433,35 @@
                 if (data.teamData.levelModes && Array.isArray(data.teamData.levelModes)) {
                     levelModes = data.teamData.levelModes;
                 }
-                
-                // 【全隊自動同步跳轉】若同組有人點擊開賽，其他隊員自動跳轉進入遊戲
+
+                let serverLevel = data.teamData.currentLevelIndex || 0;
+
+                // 🌟 方案一：判定是否為中途加入者
+                if (spectateUntilLevel === null && data.teamData.isStarted && 
+                    document.getElementById('screen-team').classList.contains('active')) {
+                    
+                    // 中途加入：鎖定在 serverLevel + 1 才能加入遊戲
+                    spectateUntilLevel = serverLevel + 1;
+                    switchScreen('screen-spectate');
+                }
+
+                // 觀戰中狀態處置
+                if (spectateUntilLevel !== null) {
+                    if (serverLevel < spectateUntilLevel) {
+                        document.getElementById('spectate-status-msg').innerHTML = 
+                            `隊友目前正進行 <strong style="color:var(--warning); font-size:18px;">第 ${serverLevel + 1} 關</strong><br>請先尋找同組夥伴會合！`;
+                        return; // 還沒到下一關，保持在觀戰畫面
+                    } else {
+                        // 隊友已經解開該關卡，邁入下一關！解鎖並讓新玩家進入遊戲
+                        spectateUntilLevel = null;
+                        document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
+                        currentLevelIndex = serverLevel;
+                        switchScreen('screen-game');
+                        loadQuestion();
+                    }
+                }
+
+                // 正常同隊同步跳轉機制
                 if (data.teamData.isStarted && 
                     document.getElementById('screen-team').classList.contains('active')) {
                     document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
@@ -492,12 +545,10 @@
         isAnswered = false;
         userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
 
-        // 🔥 更新頂部題目資訊（全程固定可見）
         document.getElementById('target-chord-display').innerText = `${targetChord} 和弦`;
         document.getElementById('mode-badge').innerText = modeObj.name;
         document.getElementById('level-progress-badge').innerText = `關卡 ${currentLevelIndex + 1} / ${myTeamChords.length}`;
         
-        // 更新按鈕預設狀態
         let btnCheck = document.getElementById('btn-check');
         btnCheck.className = "btn btn-green";
         if (modeObj.type === 'ensemble' || modeObj.type === 'boss') {
@@ -506,7 +557,6 @@
             btnCheck.innerText = "送出答案驗證";
         }
 
-        // 更新動態狀態與線索
         document.getElementById('status-text').innerText = `請在下方指板按出 ${targetChord} 和弦按法並點擊驗證`;
         document.getElementById('status-text').style.color = "white";
         
@@ -556,7 +606,6 @@
             userInput = Object.assign({}, teamData.ensembleFrets || {});
             drawFretboard();
 
-            // 🔥 終極大合奏邏輯：計算有多少隊員按下「完成」
             let ensembleDone = teamData.ensembleDone || {};
             let doneCount = Object.values(ensembleDone).filter(v => v === true).length;
             let myDone = ensembleDone[playerId] || false;
@@ -656,7 +705,6 @@
                 document.getElementById('status-text').style.color = COLOR_DANGER;
             }
         } else if (mode === 'ensemble' || mode === 'boss') {
-            // 🔥 組員按下完成，紀錄該組員 Ready
             await fetch(`${API_BASE_URL}/api/action`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_submit', data: { isCorrect } })
@@ -795,7 +843,6 @@
                 ctx.fillStyle = COLOR_PRIMARY; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(cx, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
                 
-                // 數字標籤
                 ctx.fillStyle = '#000000';
                 ctx.font = 'bold 12px Arial';
                 ctx.textAlign = 'center';
