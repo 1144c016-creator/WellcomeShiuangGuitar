@@ -10,51 +10,38 @@
             --card-bg: #262630;
             --primary: #33CC80;
             --danger: #FF4D4D;
+            --warning: #FFD700;
             --text-main: #FFFFFF;
             --text-sub: #AAAAAA;
         }
         * { box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif; user-select: none; }
         
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow: hidden;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); color: var(--text-main); overflow: hidden;
         }
 
         .screen {
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100dvh;
-            width: 100%;
-            padding: calc(15px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            height: 100dvh; width: 100%;
+            padding: calc(15px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom)) 15px;
             text-align: center;
         }
-        
         .active { display: flex; }
         
         .content-container {
-            width: 100%;
-            max-width: 480px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
+            width: 100%; max-width: 480px; display: flex; flex-direction: column;
+            justify-content: center; height: 100%;
         }
 
-        h1 { font-size: 26px; margin: 0 0 10px 0; color: var(--primary); }
-        h2 { font-size: 22px; margin: 10px 0; }
-        p { font-size: 15px; color: var(--text-sub); line-height: 1.5; margin: 8px 0; }
+        h1 { font-size: 24px; margin: 0 0 8px 0; color: var(--primary); }
+        h2 { font-size: 20px; margin: 8px 0; }
+        p { font-size: 14px; color: var(--text-sub); line-height: 1.4; margin: 6px 0; }
         
         .btn {
             background-color: #3b82f6; color: white; border: none; border-radius: 12px;
-            padding: 16px 20px; font-size: 18px; font-weight: bold; width: 100%;
-            margin-top: 15px; cursor: pointer; transition: 0.2s;
+            padding: 14px 18px; font-size: 17px; font-weight: bold; width: 100%;
+            margin-top: 10px; cursor: pointer; transition: 0.2s;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .btn:active { transform: scale(0.96); opacity: 0.8; }
@@ -62,43 +49,37 @@
         .btn-gray { background-color: #555; }
         .btn-disabled { background-color: #333; color: #777; pointer-events: none; }
 
-        .card { background-color: var(--card-bg); border-radius: 15px; padding: 20px; margin: 10px 0; }
-        .team-name { font-size: 38px; font-weight: bold; color: var(--primary); margin: 8px 0; }
-        .team-count { font-size: 18px; color: #FFD700; margin-bottom: 15px; font-weight: bold; }
+        .card { background-color: var(--card-bg); border-radius: 14px; padding: 14px; margin: 8px 0; }
+        .team-name { font-size: 36px; font-weight: bold; color: var(--primary); margin: 6px 0; }
+        .team-count { font-size: 17px; color: var(--warning); margin-bottom: 10px; font-weight: bold; }
         
+        .mode-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 20px;
+            font-size: 13px; font-weight: bold; background: #3b82f6; color: white; margin-bottom: 6px;
+        }
+
         .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 6px;
-            margin-bottom: 6px;
-            font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2px 4px; margin-bottom: 4px; font-weight: bold;
         }
 
         .canvas-container {
-            flex: 1;
-            width: 100%;
-            min-height: 180px;
-            max-height: 380px;
-            margin: 6px 0 12px 0;
-            position: relative;
+            flex: 1; width: 100%; min-height: 180px; max-height: 360px;
+            margin: 4px 0 8px 0; position: relative;
         }
         canvas {
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
+            background-color: var(--card-bg); border-radius: 14px;
+            width: 100%; height: 100%; touch-action: none;
         }
 
-        #status-text { font-size: 17px; font-weight: bold; margin-bottom: 4px; }
-        .hint-text { font-size: 14px; color: #FFD700; margin-top: 4px; font-weight: bold; }
+        #status-text { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
+        .hint-text { font-size: 13px; color: var(--warning); font-weight: bold; }
         
         .checkbox-container {
             display: flex; align-items: center; justify-content: center;
-            margin: 15px 0; gap: 10px; font-size: 16px; color: white; font-weight: bold;
+            margin: 10px 0; gap: 8px; font-size: 15px; color: white; font-weight: bold;
         }
-        .checkbox-container input { width: 22px; height: 22px; }
+        .checkbox-container input { width: 20px; height: 20px; }
 
         .live-dot {
             display: inline-block; width: 8px; height: 8px;
@@ -110,6 +91,14 @@
             50% { transform: scale(1.3); opacity: 1; }
             100% { transform: scale(0.95); opacity: 0.7; }
         }
+
+        /* 排行榜表格樣式 */
+        .leaderboard-table {
+            width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;
+        }
+        .leaderboard-table th { background-color: #333; color: var(--warning); padding: 8px; }
+        .leaderboard-table td { padding: 8px; border-bottom: 1px solid #444; }
+        .my-team-row { background-color: rgba(51, 204, 128, 0.2); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -119,7 +108,7 @@
         <div class="content-container">
             <div style="margin: auto 0;">
                 <h1>🎸 吉他社迎新解謎大冒險</h1>
-                <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
+                <p>歡迎來到吉他社！你將與夥伴們共同挑戰音樂關卡，體驗全新的團體解謎合作！</p>
             </div>
             <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">點我抽取分組</button>
         </div>
@@ -137,9 +126,9 @@
                 </div>
                 
                 <div class="card">
-                    <p style="color: white; font-weight: bold; font-size: 17px; margin-bottom: 5px;">【第一步任務】</p>
-                    <p style="color: #FFD700; margin: 5px 0;">請先截圖保存此畫面！</p>
-                    <p>現在請在活動場地內尋找與你同組的隊員。全員集合完畢後，勾選下方確認，才能開始解謎。</p>
+                    <p style="color: white; font-weight: bold; font-size: 16px; margin-bottom: 4px;">【第一步任務】</p>
+                    <p style="color: var(--warning); margin: 4px 0;">請截圖保存！並尋找同組隊員集合。</p>
+                    <p>關卡包含「全員完成」、「接力棒次」與「合奏分工」，請務必整組一起行動！</p>
                 </div>
                 
                 <div class="checkbox-container">
@@ -155,13 +144,14 @@
     <div id="screen-game" class="screen">
         <div class="content-container">
             <div class="game-header">
-                <span id="game-team-name" style="color: var(--primary); font-size: 16px;"></span>
-                <span id="game-team-count" style="color: #FFD700; font-size: 14px;">
+                <span id="game-team-name" style="color: var(--primary); font-size: 15px;"></span>
+                <span id="game-team-count" style="color: var(--warning); font-size: 13px;">
                     <span class="live-dot"></span>隊員：更新中...
                 </span>
             </div>
 
-            <div class="card" style="padding: 12px; margin: 0 0 8px 0;">
+            <div class="card" style="padding: 10px; margin: 0 0 6px 0;">
+                <div><span id="mode-badge" class="mode-badge">模式載入中</span></div>
                 <div id="status-text">準備中...</div>
                 <div id="hint-text" class="hint-text"></div>
             </div>
@@ -170,31 +160,47 @@
                 <canvas id="fretboardCanvas"></canvas>
             </div>
             
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" id="btn-check" onclick="checkAnswer()" style="margin-top:0;">確認答案</button>
-                <button class="btn btn-gray" id="btn-next" onclick="nextQuestion()" style="margin-top:0;">尚未答對</button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn" id="btn-check" onclick="handleButtonClick()" style="margin-top:0;">確認答案</button>
+                <button class="btn btn-gray btn-disabled" id="btn-next" onclick="nextQuestion()" style="margin-top:0;">下一關</button>
             </div>
         </div>
     </div>
 
     <!-- 畫面 4: 結算畫面 -->
     <div id="screen-result" class="screen">
-        <div class="content-container">
-            <div style="margin: auto 0;">
-                <h1>🎉 任務完成！</h1>
-                <div class="card">
-                    <h2 id="result-team" style="color: var(--primary); margin-bottom: 15px;"></h2>
-                    <p id="result-stats" style="color: white; font-size: 18px; margin: 15px 0;"></p>
-                    <hr style="border-color: #444; margin: 15px 0;">
-                    <p style="color: #FFD700; font-weight: bold; margin-top: 15px;">【最終任務】</p>
-                    <p>請保留此畫面，整組帶隊前往「吉他社社辦」找最終關主，核對全員通關畫面即可獲勝！</p>
-                </div>
+        <div class="content-container" style="justify-content: flex-start; overflow-y: auto;">
+            <h1 style="margin-top: 10px;">🎉 任務完成！</h1>
+            <div class="card" style="margin: 5px 0; padding: 12px;">
+                <h2 id="result-team" style="color: var(--primary); margin: 4px 0;"></h2>
+                <p id="result-stats" style="color: white; font-size: 15px; margin: 4px 0;"></p>
             </div>
+
+            <h3 style="color: var(--warning); margin: 8px 0 4px 0;">🏆 活動各組排行榜 (已結算)</h3>
+            <div style="overflow-x: auto;">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>名次</th>
+                            <th>小隊</th>
+                            <th>人數</th>
+                            <th>成績/進度</th>
+                            <th>錯數</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="color: var(--text-sub); font-size: 12px; margin-top: 12px;">
+                * 排名成績與人數已在通關瞬間凍結。<br>請整組前往社辦找關主核對！
+            </p>
         </div>
     </div>
 
 <script>
-    // ⚠️ 請將下方網址替換為你在 Render 複製的公開網址 (結尾不要加斜線 /)
+    // 請替換為你的 Render App URL
     const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
 
     const COLOR_PRIMARY = "#33CC80"; 
@@ -211,16 +217,19 @@
         "C7": { frets: {6: -1, 5: 3, 4: 2, 3: 3, 2: 1, 1: 0}, hint: "線索：找尋身上背著木箱鼓的關主。" }
     };
 
+    let playerId = "";
     let myTeam = "";
-    let myTeamChords = []; // 儲存從後端取得的該組專屬題目順序
-    let remainingChords = [];
-    let targetChord = "";
+    let myTeamChords = [];
+    let levelModes = [];
+    let currentLevelIndex = 0;
+    
     let isAnswered = false;
     let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1}; 
-    let startTime = 0;
-    let wrongAttempts = 0;
+    let assignedStrings = [1, 2, 3, 4, 5, 6]; 
+    let playerIndex = 0;
+    let totalPlayers = 1;
+
     let pollInterval = null;
-    const totalQuestions = Object.keys(CHORDS_DB).length;
 
     function switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -239,266 +248,389 @@
             const response = await fetch(`${API_BASE_URL}/api/assign-team`);
             const data = await response.json();
 
-            if (!response.ok) {
-                alert("伺服器回應錯誤，請重新試試看。");
-                btn.innerText = "點我抽取分組";
-                btn.style.pointerEvents = "auto";
-                return;
-            }
-
+            playerId = data.playerId;
             myTeam = data.team;
-            myTeamChords = data.chords || Object.keys(CHORDS_DB); // 接收該組專屬題目順序
+            myTeamChords = data.chords;
+            levelModes = data.levelModes;
             
             document.getElementById('display-team').innerText = myTeam;
             switchScreen('screen-team');
 
-            startTeamStatusPolling();
+            startPolling();
 
         } catch (error) {
-            alert("無法連線至分組伺服器！請確認網址設定正確且 Render 伺服器已啟動。");
+            alert("連線失敗！請確認 Render 伺服器是否正常運行。");
             btn.innerText = "點我抽取分組";
             btn.style.pointerEvents = "auto";
         }
     }
 
-    function startTeamStatusPolling() {
-        fetchTeamStatus();
+    function startPolling() {
+        fetchStatus();
         if (!pollInterval) {
-            pollInterval = setInterval(fetchTeamStatus, 3000);
+            pollInterval = setInterval(fetchStatus, 3000);
         }
     }
 
-    async function fetchTeamStatus() {
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    async function fetchStatus() {
         if (!myTeam) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/status`);
+            const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
             const data = await res.json();
+            
             if (data.teamCounts && data.teamCounts[myTeam] !== undefined) {
                 const count = data.teamCounts[myTeam];
+                document.getElementById('display-count').innerHTML = 
+                    `<span class="live-dot"></span>本組目前簽到：<strong style="font-size: 22px;">${count}</strong> 人`;
+                document.getElementById('game-team-count').innerHTML = 
+                    `<span class="live-dot"></span>隊員：<strong style="font-size: 15px;">${count}</strong> 人`;
+            }
+
+            if (data.teamData) {
+                totalPlayers = data.teamData.totalPlayers || 1;
+                playerIndex = data.teamData.playerIndex || 0;
                 
-                const displayCountEl = document.getElementById('display-count');
-                if (displayCountEl) {
-                    displayCountEl.innerHTML = 
-                        `<span class="live-dot"></span>本組目前簽到：<strong style="font-size: 24px;">${count}</strong> 人`;
-                }
-                
-                const gameCountEl = document.getElementById('game-team-count');
-                if (gameCountEl) {
-                    gameCountEl.innerHTML = 
-                        `<span class="live-dot"></span>本組隊員：<strong style="font-size: 16px;">${count}</strong> 人`;
+                // 計算分工關卡中，該玩家分配到的琴弦
+                calcAssignedStrings();
+
+                // 同步關卡狀態
+                if (document.getElementById('screen-game').classList.contains('active')) {
+                    syncGameState(data.teamData);
                 }
             }
         } catch (e) {
-            console.log("連線更新失敗，將在下次重試", e);
+            console.log("連線同步中...", e);
         }
+    }
+
+    function calcAssignedStrings() {
+        if (totalPlayers <= 1) {
+            assignedStrings = [1, 2, 3, 4, 5, 6];
+            return;
+        }
+        let list = [];
+        for (let s = 1; s <= 6; s++) {
+            let owner = Math.min(Math.floor((s - 1) / (6 / totalPlayers)), totalPlayers - 1);
+            if (owner === playerIndex) list.push(s);
+        }
+        assignedStrings = list.length > 0 ? list : [1];
     }
 
     function toggleStartButton() {
         let isChecked = document.getElementById('team-ready-checkbox').checked;
-        let btn = document.getElementById('btn-start-game');
-        if (isChecked) {
-            btn.className = "btn btn-green";
-        } else {
-            btn.className = "btn btn-disabled";
-        }
+        document.getElementById('btn-start-game').className = isChecked ? "btn btn-green" : "btn btn-disabled";
     }
 
-    function startGame() {
+    async function startGame() {
         if (!document.getElementById('team-ready-checkbox').checked) return;
-        
         document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
-        fetchTeamStatus();
+        
+        await fetch(`${API_BASE_URL}/api/action`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
+        });
 
-        // 關鍵修改：使用該組專屬題目順序，不再在單一手機上隨機亂序
-        remainingChords = [...myTeamChords]; 
-        wrongAttempts = 0;
-        startTime = Date.now();
+        currentLevelIndex = 0;
         loadQuestion();
         switchScreen('screen-game');
     }
 
     function loadQuestion() {
-        if (remainingChords.length === 0) {
-            showResult();
+        if (currentLevelIndex >= myTeamChords.length) {
+            finishGame();
             return;
         }
-        targetChord = remainingChords.shift();
+
+        let targetChord = myTeamChords[currentLevelIndex];
+        let mode = levelModes[currentLevelIndex];
         isAnswered = false;
         userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
-        
-        let currentQ = totalQuestions - remainingChords.length;
-        document.getElementById('status-text').innerText = `關卡 ${currentQ}/${totalQuestions}：請按出 ${targetChord} 和弦`;
-        document.getElementById('status-text').style.color = 'var(--text-main)';
+
+        document.getElementById('mode-badge').innerText = mode.name;
+        document.getElementById('status-text').innerText = `關卡 ${currentLevelIndex + 1}/${myTeamChords.length}：請按出 ${targetChord} 和弦`;
+        document.getElementById('status-text').style.color = "white";
         document.getElementById('hint-text').innerText = CHORDS_DB[targetChord].hint;
-        
+
         let btnNext = document.getElementById('btn-next');
-        btnNext.innerText = "尚未答對";
-        btnNext.className = "btn btn-gray";
-        
+        btnNext.className = "btn btn-gray btn-disabled";
+        btnNext.innerText = "等待全員解鎖";
+
         drawFretboard();
     }
 
-    function checkAnswer() {
+    function syncGameState(teamData) {
+        if (teamData.currentLevelIndex !== currentLevelIndex) {
+            currentLevelIndex = teamData.currentLevelIndex;
+            loadQuestion();
+            return;
+        }
+
+        let mode = levelModes[currentLevelIndex].type;
+        let btnNext = document.getElementById('btn-next');
+        let statusText = document.getElementById('status-text');
+
+        if (mode === 'lock') {
+            let lockStatus = teamData.lockStatus || {};
+            let solvedCount = Object.values(lockStatus).filter(v => v === true).length;
+            if (lockStatus[playerId]) {
+                statusText.innerText = `✅ 你已完成！等待隊友中 (${solvedCount}/${totalPlayers})`;
+                statusText.style.color = COLOR_PRIMARY;
+            }
+            if (solvedCount >= totalPlayers && totalPlayers > 0) {
+                statusText.innerText = `🎉 全員答對！請點擊下一關`;
+                btnNext.className = "btn btn-green";
+                btnNext.innerText = "下一關";
+                isAnswered = true;
+            }
+        } else if (mode === 'ensemble' || mode === 'boss') {
+            userInput = Object.assign({}, teamData.ensembleFrets);
+            drawFretboard();
+            let targetChord = myTeamChords[currentLevelIndex];
+            let correct = CHORDS_DB[targetChord].frets;
+            let isCorrect = true;
+            for (let i = 1; i <= 6; i++) {
+                if (userInput[i] !== correct[i]) isCorrect = false;
+            }
+            if (isCorrect) {
+                statusText.innerText = `🎉 合奏成功！全組按對 ${targetChord} 和弦！`;
+                statusText.style.color = COLOR_PRIMARY;
+                btnNext.className = "btn btn-green";
+                btnNext.innerText = "下一關";
+                isAnswered = true;
+            } else {
+                statusText.innerText = `合奏中：你的責任弦 [ ${assignedStrings.join(',')} 弦 ]`;
+            }
+        } else if (mode === 'relay') {
+            let turnIndex = teamData.relayTurnIndex || 0;
+            if (turnIndex >= totalPlayers) {
+                statusText.innerText = `🎉 接力挑戰成功！全員過關！`;
+                statusText.style.color = COLOR_PRIMARY;
+                btnNext.className = "btn btn-green";
+                btnNext.innerText = "下一關";
+                isAnswered = true;
+            } else {
+                let isMyTurn = (turnIndex % totalPlayers) === playerIndex;
+                if (isMyTurn) {
+                    statusText.innerText = `⚡ 輪到你了 (第 ${turnIndex + 1}/${totalPlayers} 棒)！請按對和弦`;
+                    statusText.style.color = COLOR_PRIMARY;
+                } else {
+                    statusText.innerText = `⏳ 等待隊友接力中 (第 ${turnIndex + 1}/${totalPlayers} 棒)...`;
+                    statusText.style.color = "var(--warning)";
+                }
+            }
+        }
+    }
+
+    async function handleButtonClick() {
         if (isAnswered) return;
+        let mode = levelModes[currentLevelIndex].type;
+        let targetChord = myTeamChords[currentLevelIndex];
         let correct = CHORDS_DB[targetChord].frets;
         let isCorrect = true;
         for (let i = 1; i <= 6; i++) {
             if (userInput[i] !== correct[i]) isCorrect = false;
         }
 
-        let statusText = document.getElementById('status-text');
-        if (isCorrect) {
-            statusText.innerText = `正確！這就是 ${targetChord}！`;
-            statusText.style.color = COLOR_PRIMARY;
-            isAnswered = true;
-            let btnNext = document.getElementById('btn-next');
-            btnNext.innerText = remainingChords.length === 0 ? "前往結算" : "下一關";
-            btnNext.className = "btn btn-green";
+        if (mode === 'lock') {
+            if (isCorrect) {
+                await fetch(`${API_BASE_URL}/api/action`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ playerId, team: myTeam, action: 'lock_submit', data: { isCorrect: true } })
+                });
+                fetchStatus();
+            } else {
+                document.getElementById('status-text').innerText = "指法不對喔！請重新檢查。";
+                document.getElementById('status-text').style.color = COLOR_DANGER;
+                await fetch(`${API_BASE_URL}/api/action`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ playerId, team: myTeam, action: 'lock_submit', data: { isCorrect: false } })
+                });
+            }
+        } else if (mode === 'relay') {
+            if (isCorrect) {
+                await fetch(`${API_BASE_URL}/api/action`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ playerId, team: myTeam, action: 'relay_submit', data: { isCorrect: true } })
+                });
+                fetchStatus();
+            } else {
+                document.getElementById('status-text').innerText = "按法有錯！接力中斷，請重試！";
+                document.getElementById('status-text').style.color = COLOR_DANGER;
+            }
+        }
+    }
+
+    async function nextQuestion() {
+        if (!isAnswered) return;
+        const res = await fetch(`${API_BASE_URL}/api/action`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ playerId, team: myTeam, action: 'next_level' })
+        });
+        const data = await res.json();
+        if (data.isFinished) {
+            finishGame();
         } else {
-            wrongAttempts++;
-            statusText.innerText = "指法不對喔！請再去確認線索。";
-            statusText.style.color = COLOR_DANGER;
+            fetchStatus();
         }
     }
 
-    function nextQuestion() {
-        if (!isAnswered) {
-            let statusText = document.getElementById('status-text');
-            statusText.innerText = "請先解開此關卡才能前進！";
-            statusText.style.color = COLOR_DANGER;
-            return;
-        }
-        loadQuestion();
-    }
+    async function finishGame() {
+        // 進入結算畫面：立刻停止連線輪詢（人數與成績在後端及前端徹底凍結）
+        stopPolling();
 
-    function showResult() {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-        }
-
-        let timeTaken = Math.floor((Date.now() - startTime) / 1000);
-        let mins = Math.floor(timeTaken / 60);
-        let secs = timeTaken % 60;
-        let timeStr = mins > 0 ? `${mins} 分 ${secs} 秒` : `${secs} 秒`;
+        const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
+        const data = await res.json();
         
         document.getElementById('result-team').innerText = `【 ${myTeam} 】`;
+        
+        // 找出本組成績
+        let myTeamRank = data.leaderboard.find(l => l.team === myTeam);
+        let mins = Math.floor((myTeamRank.finishTimeSeconds || 0) / 60);
+        let secs = (myTeamRank.finishTimeSeconds || 0) % 60;
+        
         document.getElementById('result-stats').innerHTML = `
-            總花費時間: <span style="color:${COLOR_PRIMARY}">${timeStr}</span><br><br>
-            答錯次數: <span style="color:${COLOR_DANGER}">${wrongAttempts}</span> 次
+            通關總耗時: <span style="color:${COLOR_PRIMARY}">${mins} 分 ${secs} 秒</span><br>
+            答錯總次數: <span style="color:${COLOR_DANGER}">${myTeamRank.wrongAttempts}</span> 次
         `;
+
+        // 渲染凍結的排行榜
+        let tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = "";
+        data.leaderboard.forEach((item, index) => {
+            let tr = document.createElement('tr');
+            if (item.team === myTeam) tr.className = "my-team-row";
+            
+            let timeDisplay = item.isFinished 
+                ? `${Math.floor(item.finishTimeSeconds/60)}分${item.finishTimeSeconds%60}秒` 
+                : `關卡 ${item.currentLevel}`;
+
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.team}</td>
+                <td>${item.memberCount} 人</td>
+                <td>${timeDisplay}</td>
+                <td>${item.wrongAttempts}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
         switchScreen('screen-result');
     }
 
+    // 指板繪製與點擊控制
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
     function initCanvas() {
         let rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        canvas.width = rect.width; canvas.height = rect.height;
         drawFretboard();
     }
 
     window.addEventListener('resize', () => {
-        if (document.getElementById('screen-game').classList.contains('active')) {
-            initCanvas();
-        }
+        if (document.getElementById('screen-game').classList.contains('active')) initCanvas();
     });
 
     function drawFretboard() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let padX = 45, padY = 25;
+        let padX = 40, padY = 20;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
         let fretW = w / 3;
         let stringH = h / 5;
 
-        ctx.fillStyle = '#DDDDCC';
-        ctx.fillRect(padX - 8, padY - 5, 12, h + 10);
-
-        ctx.strokeStyle = '#888888';
-        ctx.lineWidth = 3;
+        // 琴枕與琴格
+        ctx.fillStyle = '#DDDDCC'; ctx.fillRect(padX - 8, padY - 5, 10, h + 10);
+        ctx.strokeStyle = '#777777'; ctx.lineWidth = 2;
         for (let i = 1; i <= 3; i++) {
-            ctx.beginPath();
-            ctx.moveTo(padX + i * fretW, padY);
-            ctx.lineTo(padX + i * fretW, padY + h);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(padX + i * fretW, padY); ctx.lineTo(padX + i * fretW, padY + h); ctx.stroke();
         }
+
+        let mode = levelModes[currentLevelIndex] ? levelModes[currentLevelIndex].type : 'lock';
 
         const stringNames = {1: 'e', 2: 'B', 3: 'G', 4: 'D', 5: 'A', 6: 'E'};
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let y = padY + (stringNum - 1) * stringH; 
-            
-            ctx.strokeStyle = '#CCCCCC';
-            ctx.lineWidth = 1 + ((stringNum - 1) * 0.6); 
-            ctx.beginPath();
-            ctx.moveTo(padX, y);
-            ctx.lineTo(padX + w, y);
-            ctx.stroke();
+            let isMine = (mode === 'ensemble' || mode === 'boss') ? assignedStrings.includes(stringNum) : true;
 
-            ctx.fillStyle = '#DDDDDD';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText(stringNames[stringNum], 12, y + 5);
+            // 琴弦高亮表示 (合奏模式下分配給自己的弦會呈現金色高亮)
+            ctx.strokeStyle = isMine ? (mode === 'ensemble' || mode === 'boss' ? '#FFD700' : '#CCCCCC') : '#444444';
+            ctx.lineWidth = isMine ? 2 + ((stringNum - 1) * 0.5) : 1;
+            ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + w, y); ctx.stroke();
+
+            ctx.fillStyle = isMine ? '#FFFFFF' : '#666666';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(stringNames[stringNum], 10, y + 4);
         }
 
+        // 繪製按壓標記
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
             
             if (fretVal === -1) {
-                ctx.strokeStyle = COLOR_DANGER;
-                ctx.lineWidth = 4;
-                let cx = padX - 26;
+                ctx.strokeStyle = COLOR_DANGER; ctx.lineWidth = 3;
+                let cx = padX - 22;
                 ctx.beginPath();
-                ctx.moveTo(cx - 7, y - 7); ctx.lineTo(cx + 7, y + 7);
-                ctx.moveTo(cx - 7, y + 7); ctx.lineTo(cx + 7, y - 7);
+                ctx.moveTo(cx - 5, y - 5); ctx.lineTo(cx + 5, y + 5);
+                ctx.moveTo(cx - 5, y + 5); ctx.lineTo(cx + 5, y - 5);
                 ctx.stroke();
             } else if (fretVal === 0) {
-                ctx.strokeStyle = COLOR_PRIMARY;
-                ctx.lineWidth = 4;
-                let cx = padX - 26;
-                ctx.beginPath();
-                ctx.arc(cx, y, 7, 0, Math.PI * 2);
-                ctx.stroke();
+                ctx.strokeStyle = COLOR_PRIMARY; ctx.lineWidth = 3;
+                let cx = padX - 22;
+                ctx.beginPath(); ctx.arc(cx, y, 6, 0, Math.PI * 2); ctx.stroke();
             } else {
                 let cx = padX + (fretVal - 0.5) * fretW;
-                ctx.fillStyle = COLOR_PRIMARY;
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(cx, y, 13, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
+                ctx.fillStyle = COLOR_PRIMARY; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(cx, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
             }
         }
     }
 
-    canvas.addEventListener('pointerdown', (e) => {
+    canvas.addEventListener('pointerdown', async (e) => {
         if(isAnswered) return; 
+
+        let mode = levelModes[currentLevelIndex].type;
         
+        // 接力模式下非自己的棒次無法觸控
+        if (mode === 'relay') {
+            const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
+            const data = await res.json();
+            let turnIndex = data.teamData.relayTurnIndex || 0;
+            if ((turnIndex % totalPlayers) !== playerIndex) return;
+        }
+
         let rect = canvas.getBoundingClientRect();
         let scaleX = canvas.width / rect.width;
         let scaleY = canvas.height / rect.height;
-        
         let x = (e.clientX - rect.left) * scaleX;
         let y = (e.clientY - rect.top) * scaleY;
         
-        let padX = 45, padY = 25;
-        let w = canvas.width - padX * 2;
-        let h = canvas.height - padY * 2;
-        let fretW = w / 3;
-        let stringH = h / 5;
+        let padX = 40, padY = 20;
+        let w = canvas.width - padX * 2, h = canvas.height - padY * 2;
+        let fretW = w / 3, stringH = h / 5;
 
         let clickedString = null;
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let strY = padY + (stringNum - 1) * stringH;
             if (Math.abs(y - strY) < stringH / 1.5) {
-                clickedString = stringNum; 
-                break;
+                clickedString = stringNum; break;
             }
         }
         if (!clickedString) return;
+
+        // 合奏模式下只能觸控分配給自己的琴弦
+        if ((mode === 'ensemble' || mode === 'boss') && !assignedStrings.includes(clickedString)) {
+            return;
+        }
 
         let clickedFret = -1;
         if (x < padX) {
@@ -506,18 +638,22 @@
         } else {
             for (let i = 1; i <= 3; i++) {
                 if (x >= padX + (i-1)*fretW && x <= padX + i*fretW) {
-                    clickedFret = i;
-                    break;
+                    clickedFret = i; break;
                 }
             }
         }
 
-        if (userInput[clickedString] === clickedFret) {
-            userInput[clickedString] = -1; 
-        } else {
-            userInput[clickedString] = clickedFret; 
-        }
+        userInput[clickedString] = (userInput[clickedString] === clickedFret) ? -1 : clickedFret;
         drawFretboard();
+
+        // 合奏模式即時同步琴弦至伺服器
+        if (mode === 'ensemble' || mode === 'boss') {
+            await fetch(`${API_BASE_URL}/api/action`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_update', data: { frets: userInput } })
+            });
+            fetchStatus();
+        }
     });
 
 </script>
