@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>吉他社迎新解謎大冒險</title>
+    <style>
+        :root {
+            --bg-color: #14141a;
+            --card-bg: #262630;
+            --primary: #33CC80;
+            --danger: #FF4D4D;
+            --text-main: #FFFFFF;
+            --text-sub: #AAAAAA;
+        }
+        * { box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif; user-select: none; }
+        body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
+        .screen { display: none; flex-direction: column; height: 100vh; padding: 30px 20px; text-align: center; }
+        .active { display: flex; }
+        
+        h1 { font-size: 28px; margin-bottom: 10px; color: var(--primary); }
+        h2 { font-size: 24px; margin: 10px 0; }
+        p { font-size: 16px; color: var(--text-sub); line-height: 1.5; }
+        
+        .btn {
+            background-color: #3b82f6; color: white; border: none; border-radius: 12px;
+            padding: 15px 20px; font-size: 18px; font-weight: bold; width: 100%;
+            margin-top: 15px; cursor: pointer; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn-green { background-color: var(--primary); color: #000; }
+        .btn-gray { background-color: #555; }
+        .btn-disabled { background-color: #333; color: #777; pointer-events: none; }
+
+        .card { background-color: var(--card-bg); border-radius: 15px; padding: 20px; margin: 15px 0; }
+        .team-name { font-size: 40px; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .team-count { font-size: 20px; color: #FFD700; margin-bottom: 20px; font-weight: bold; }
+        
+        canvas { background-color: var(--card-bg); border-radius: 15px; width: 100%; max-height: 50vh; touch-action: none; }
+        #status-text { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .hint-text { font-size: 15px; color: #FFD700; margin-top: 8px; font-weight: bold; }
+        
+        /* 自訂輸入框與核取方塊樣式 */
+        .input-group {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 15px 0; gap: 8px;
+        }
+        .input-group label { font-size: 16px; color: #FFF; font-weight: bold; }
+        .input-group input {
+            width: 120px; font-size: 20px; padding: 8px; text-align: center;
+            border-radius: 8px; border: 2px solid var(--primary);
+            background: #14141a; color: #FFF; font-weight: bold;
+        }
+        
+        .checkbox-container {
+            display: flex; align-items: center; justify-content: center;
+            margin-top: 20px; gap: 10px; font-size: 18px; color: white; font-weight: bold;
+        }
+        .checkbox-container input { width: 22px; height: 22px; }
+    </style>
+</head>
+<body>
+
+    <!-- 畫面 1: 首頁 (新增總人數自訂輸入) -->
+    <div id="screen-start" class="screen active">
+        <h1>🎸 吉他社迎新解謎大冒險</h1>
+        <p>歡迎來到吉他社！在接下來的活動中，你將與隨機分配的夥伴一起破解校園內的音樂謎題。</p>
+        
+        <div class="card" style="margin-top: 20px;">
+            <div class="input-group">
+                <label for="input-total-players">設定活動總人數：</label>
+                <input type="number" id="input-total-players" value="40" min="1" max="500">
+            </div>
+            <p style="font-size: 13px; color: #AAA;">(系統將依據此人數自動計算各英文組別平均應到人數)</p>
+        </div>
+        
+        <div style="flex-grow: 1;"></div>
+        <button class="btn btn-green" onclick="assignTeam()">點我抽取分組</button>
+    </div>
+
+    <!-- 畫面 2: 分組結果與人數確認 -->
+    <div id="screen-team" class="screen">
+        <h1>你的專屬小隊是</h1>
+        <div class="team-name" id="display-team"></div>
+        <div class="team-count" id="display-count"></div>
+        
+        <div class="card">
+            <p style="color: white; font-weight: bold; font-size: 18px;">【第一步任務】</p>
+            <p style="color: #FFD700;">請先截圖保存此畫面！</p>
+            <p>現在請在活動場地內尋找與你同組的隊員。全員集合完畢後，勾選下方確認，才能開始解謎。</p>
+        </div>
+        
+        <div class="checkbox-container">
+            <input type="checkbox" id="team-ready-checkbox" onchange="toggleStartButton()">
+            <label for="team-ready-checkbox" id="ready-label">我們已經全員到齊</label>
+        </div>
+        
+        <div style="flex-grow: 1;"></div>
+        <button class="btn btn-disabled" id="btn-start-game" onclick="startGame()">進入關卡！</button>
+    </div>
+
+    <!-- 畫面 3: 遊戲畫面 -->
+    <div id="screen-game" class="screen">
+        <div class="card" style="padding: 10px;">
+            <div id="status-text">準備中...</div>
+            <div id="hint-text" class="hint-text"></div>
+        </div>
+        
+        <canvas id="fretboardCanvas"></canvas>
+        
+        <div style="display: flex; gap: 10px; margin-top: auto;">
+            <button class="btn" id="btn-check" onclick="checkAnswer()">確認答案</button>
+            <button class="btn btn-gray" id="btn-next" onclick="nextQuestion()">尚未答對</button>
+        </div>
+    </div>
+
+    <!-- 畫面 4: 結算畫面 (顯示組別與組別人數) -->
+    <div id="screen-result" class="screen">
+        <h1>🎉 任務完成！</h1>
+        <div class="card">
+            <h2 id="result-team" style="color: var(--primary); margin-bottom: 5px;"></h2>
+            <div id="result-team-count" style="color: #FFD700; font-weight: bold; font-size: 18px; margin-bottom: 15px;"></div>
+            <p id="result-stats" style="color: white; font-size: 18px; margin: 15px 0;"></p>
+            <hr style="border-color: #444;">
+            <p style="color: #FFD700; font-weight: bold; margin-top: 15px;">【最終任務】</p>
+            <p>請保留此畫面，整組帶隊前往「吉他社社辦」找最終關主，核對全員通關畫面即可獲勝！</p>
+        </div>
+    </div>
+
+<script>
+    // ==========================================
+    // ⚙️ 顏色定義與英文組別設定
+    // ==========================================
+    const COLOR_PRIMARY = "#33CC80"; // 成功/正確綠色
+    const COLOR_DANGER  = "#FF4D4D"; // 錯誤/叉叉紅色
+    const TEAM_NAMES = ["Group A", "Group B", "Group C", "Group D", "Group E"]; // 英文組別
+
+    let membersPerGroup = 8; // 動態計算出的每組人數
+
+    // 和弦與線索設定
+    const CHORDS_DB = {
+        "C": { frets: {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0}, hint: "線索：去找穿著藍色社服的學長！" },
+        "D": { frets: {6: -1, 5: -1, 4: 0, 3: 2, 2: 3, 1: 2}, hint: "線索：答案藏在司令台右側的階梯旁。" },
+        "G": { frets: {6: 3, 5: 2, 4: 0, 3: 0, 2: 0, 1: 3}, hint: "線索：前往體育館門口，尋找紅色信封。" },
+        "Am": { frets: {6: -1, 5: 0, 4: 2, 3: 2, 2: 1, 1: 0}, hint: "線索：去找抱著木吉他的學姐拿提示！" },
+        "Em": { frets: {6: 0, 5: 2, 4: 2, 3: 0, 2: 0, 1: 0}, hint: "線索：圖書館前的大樹下有你要的東西。" },
+        "F": { frets: {6: 1, 5: 3, 4: 3, 3: 2, 2: 1, 1: 1}, hint: "線索：尋找吉他社的社旗所在處。" },
+        "Fm": { frets: {6: 1, 5: 3, 4: 3, 3: 1, 2: 1, 1: 1}, hint: "線索：籃球場旁邊的佈告欄。" },
+        "C7": { frets: {6: -1, 5: 3, 4: 2, 3: 3, 2: 1, 1: 0}, hint: "線索：找尋身上背著木箱鼓的關主。" }
+    };
+    // ==========================================
+
+    let myTeam = "";
+    let remainingChords = [];
+    let targetChord = "";
+    let isAnswered = false;
+    let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1}; 
+    let startTime = 0;
+    let wrongAttempts = 0;
+    const totalQuestions = Object.keys(CHORDS_DB).length;
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if(screenId === 'screen-game') initCanvas();
+    }
+
+    // 隨機分組邏輯 (依據輸入的總人數動態計算)
+    function assignTeam() {
+        const inputVal = parseInt(document.getElementById('input-total-players').value);
+        const totalPlayers = isNaN(inputVal) || inputVal < 1 ? 40 : inputVal;
+        
+        // 自動計算每組應到人數 (無條件進位)
+        membersPerGroup = Math.ceil(totalPlayers / TEAM_NAMES.length);
+
+        myTeam = TEAM_NAMES[Math.floor(Math.random() * TEAM_NAMES.length)];
+        document.getElementById('display-team').innerText = myTeam;
+        document.getElementById('display-count').innerText = `(本組應到人數：${membersPerGroup} 人)`;
+        document.getElementById('ready-label').innerText = `我們 ${membersPerGroup} 人已經全部到齊`;
+        switchScreen('screen-team');
+    }
+
+    // 核取方塊改變時，啟用開始按鈕
+    function toggleStartButton() {
+        let isChecked = document.getElementById('team-ready-checkbox').checked;
+        let btn = document.getElementById('btn-start-game');
+        if (isChecked) {
+            btn.className = "btn btn-green";
+        } else {
+            btn.className = "btn btn-disabled";
+        }
+    }
+
+    function startGame() {
+        if (!document.getElementById('team-ready-checkbox').checked) return;
+        remainingChords = Object.keys(CHORDS_DB).sort(() => Math.random() - 0.5); 
+        wrongAttempts = 0;
+        startTime = Date.now();
+        loadQuestion();
+        switchScreen('screen-game');
+    }
+
+    function loadQuestion() {
+        if (remainingChords.length === 0) {
+            showResult();
+            return;
+        }
+        targetChord = remainingChords.shift();
+        isAnswered = false;
+        userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
+        
+        let currentQ = totalQuestions - remainingChords.length;
+        document.getElementById('status-text').innerText = `關卡 ${currentQ}/${totalQuestions}：請按出 ${targetChord} 和弦`;
+        document.getElementById('status-text').style.color = 'var(--text-main)';
+        document.getElementById('hint-text').innerText = CHORDS_DB[targetChord].hint;
+        
+        let btnNext = document.getElementById('btn-next');
+        btnNext.innerText = "尚未答對";
+        btnNext.className = "btn btn-gray";
+        
+        drawFretboard();
+    }
+
+    function checkAnswer() {
+        if (isAnswered) return;
+        let correct = CHORDS_DB[targetChord].frets;
+        let isCorrect = true;
+        for (let i = 1; i <= 6; i++) {
+            if (userInput[i] !== correct[i]) isCorrect = false;
+        }
+
+        let statusText = document.getElementById('status-text');
+        if (isCorrect) {
+            statusText.innerText = `正確！這就是 ${targetChord}！`;
+            statusText.style.color = COLOR_PRIMARY;
+            isAnswered = true;
+            let btnNext = document.getElementById('btn-next');
+            btnNext.innerText = remainingChords.length === 0 ? "前往結算" : "下一關";
+            btnNext.className = "btn btn-green";
+        } else {
+            wrongAttempts++;
+            statusText.innerText = "指法不對喔！請再去確認線索。";
+            statusText.style.color = COLOR_DANGER;
+        }
+    }
+
+    function nextQuestion() {
+        if (!isAnswered) {
+            let statusText = document.getElementById('status-text');
+            statusText.innerText = "請先解開此關卡才能前進！";
+            statusText.style.color = COLOR_DANGER;
+            return;
+        }
+        loadQuestion();
+    }
+
+    function showResult() {
+        let timeTaken = Math.floor((Date.now() - startTime) / 1000);
+        let mins = Math.floor(timeTaken / 60);
+        let secs = timeTaken % 60;
+        let timeStr = mins > 0 ? `${mins} 分 ${secs} 秒` : `${secs} 秒`;
+        
+        document.getElementById('result-team').innerText = `【 ${myTeam} 】`;
+        document.getElementById('result-team-count').innerText = `小隊編制人數：${membersPerGroup} 人`;
+        document.getElementById('result-stats').innerHTML = `
+            總花費時間: <span style="color:${COLOR_PRIMARY}">${timeStr}</span><br><br>
+            答錯次數: <span style="color:${COLOR_DANGER}">${wrongAttempts}</span> 次
+        `;
+        switchScreen('screen-result');
+    }
+
+    // --- HTML Canvas 指板繪製與互動邏輯 ---
+    const canvas = document.getElementById('fretboardCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function initCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = window.innerHeight * 0.45;
+        drawFretboard();
+    }
+
+    function drawFretboard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let padX = 50, padY = 30;
+        let w = canvas.width - padX * 2;
+        let h = canvas.height - padY * 2;
+        let fretW = w / 4;
+        let stringH = h / 5;
+
+        // 畫琴枕 (Nut)
+        ctx.fillStyle = '#DDDDCC';
+        ctx.fillRect(padX - 8, padY - 5, 12, h + 10);
+
+        // 畫琴桁 (Frets)
+        ctx.strokeStyle = '#888888';
+        ctx.lineWidth = 3;
+        for (let i = 1; i <= 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(padX + i * fretW, padY);
+            ctx.lineTo(padX + i * fretW, padY + h);
+            ctx.stroke();
+        }
+
+        // 畫弦 (Strings) 1弦(e)在最上面, 6弦(E)在最下面
+        const stringNames = {1: 'e', 2: 'B', 3: 'G', 4: 'D', 5: 'A', 6: 'E'};
+        for (let stringNum = 1; stringNum <= 6; stringNum++) {
+            let y = padY + (stringNum - 1) * stringH; 
+            
+            ctx.strokeStyle = '#CCCCCC';
+            ctx.lineWidth = 1 + ((stringNum - 1) * 0.6); 
+            ctx.beginPath();
+            ctx.moveTo(padX, y);
+            ctx.lineTo(padX + w, y);
+            ctx.stroke();
+
+            ctx.fillStyle = '#DDDDDD';
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText(stringNames[stringNum], 15, y + 6);
+        }
+
+        // 畫使用者輸入的點 (修正色碼顯示)
+        for (let stringNum = 1; stringNum <= 6; stringNum++) {
+            let fretVal = userInput[stringNum];
+            let y = padY + (stringNum - 1) * stringH;
+            
+            if (fretVal === -1) {
+                // 畫紅色粗叉叉
+                ctx.strokeStyle = COLOR_DANGER;
+                ctx.lineWidth = 4;
+                let cx = padX - 30;
+                ctx.beginPath();
+                ctx.moveTo(cx - 8, y - 8); ctx.lineTo(cx + 8, y + 8);
+                ctx.moveTo(cx - 8, y + 8); ctx.lineTo(cx + 8, y - 8);
+                ctx.stroke();
+            } else if (fretVal === 0) {
+                // 畫綠色空弦圈圈
+                ctx.strokeStyle = COLOR_PRIMARY;
+                ctx.lineWidth = 4;
+                let cx = padX - 30;
+                ctx.beginPath();
+                ctx.arc(cx, y, 8, 0, Math.PI * 2);
+                ctx.stroke();
+            } else {
+                // 畫按壓點 (實心綠色大圓點 + 白邊)
+                let cx = padX + (fretVal - 0.5) * fretW;
+                
+                ctx.fillStyle = COLOR_PRIMARY;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cx, y, 14, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+    }
+
+    // 處理點擊/觸控事件
+    canvas.addEventListener('pointerdown', (e) => {
+        if(isAnswered) return; 
+        
+        let rect = canvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        
+        let padX = 50, padY = 30;
+        let w = canvas.width - padX * 2;
+        let h = canvas.height - padY * 2;
+        let fretW = w / 4;
+        let stringH = h / 5;
+
+        // 判斷點擊的是哪一弦
+        let clickedString = null;
+        for (let stringNum = 1; stringNum <= 6; stringNum++) {
+            let strY = padY + (stringNum - 1) * stringH;
+            if (Math.abs(y - strY) < stringH / 1.5) {
+                clickedString = stringNum; 
+                break;
+            }
+        }
+        if (!clickedString) return;
+
+        // 判斷點擊的是哪一格
+        let clickedFret = -1;
+        if (x < padX) {
+            clickedFret = 0; 
+        } else {
+            for (let i = 1; i <= 4; i++) {
+                if (x >= padX + (i-1)*fretW && x <= padX + i*fretW) {
+                    clickedFret = i;
+                    break;
+                }
+            }
+        }
+
+        if (userInput[clickedString] === clickedFret) {
+            userInput[clickedString] = -1; 
+        } else {
+            userInput[clickedString] = clickedFret; 
+        }
+        drawFretboard();
+    });
+
+</script>
+</body>
+</html>
