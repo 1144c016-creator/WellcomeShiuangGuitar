@@ -70,7 +70,7 @@
                 <label for="input-total-players">設定活動總人數：</label>
                 <input type="number" id="input-total-players" value="40" min="1" max="500">
             </div>
-            <p style="font-size: 13px; color: #AAA;">(系統將依據此人數自動計算各英文組別平均應到人數)</p>
+            <p style="font-size: 13px; color: #AAA;">(系統將傳送至伺服器即時平均分配各組人數)</p>
         </div>
         
         <div style="flex-grow: 1;"></div>
@@ -127,9 +127,10 @@
     </div>
 
 <script>
+    const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com/"; 
+
     const COLOR_PRIMARY = "#33CC80"; 
     const COLOR_DANGER  = "#FF4D4D"; 
-    const TEAM_NAMES = ["Group A", "Group B", "Group C", "Group D", "Group E"]; 
 
     let membersPerGroup = 8; 
 
@@ -161,17 +162,33 @@
         }
     }
 
-    function assignTeam() {
+    // 向伺服器請求分配小隊
+    async function assignTeam() {
+        const btn = document.querySelector('#screen-start .btn');
+        btn.innerText = "連線分配中...";
+        btn.style.pointerEvents = "none";
+
         const inputVal = parseInt(document.getElementById('input-total-players').value);
         const totalPlayers = isNaN(inputVal) || inputVal < 1 ? 40 : inputVal;
-        
-        membersPerGroup = Math.ceil(totalPlayers / TEAM_NAMES.length);
 
-        myTeam = TEAM_NAMES[Math.floor(Math.random() * TEAM_NAMES.length)];
-        document.getElementById('display-team').innerText = myTeam;
-        document.getElementById('display-count').innerText = `(本組應到人數：${membersPerGroup} 人)`;
-        document.getElementById('ready-label').innerText = `我們 ${membersPerGroup} 人已經全部到齊`;
-        switchScreen('screen-team');
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/assign-team?total=${totalPlayers}`);
+            if (!response.ok) throw new Error("伺服器回應異常");
+
+            const data = await response.json();
+            myTeam = data.team;
+            membersPerGroup = data.membersPerGroup;
+
+            document.getElementById('display-team').innerText = myTeam;
+            document.getElementById('display-count').innerText = `(目標人數：${membersPerGroup} 人 / 你是本組第 ${data.currentCount} 位報到者)`;
+            document.getElementById('ready-label').innerText = `我們 ${membersPerGroup} 人已經全部到齊`;
+            switchScreen('screen-team');
+        } catch (error) {
+            alert("無法連線至分組伺服器！請確認網址設定正確且 Render 伺服器已啟動。");
+        } finally {
+            btn.innerText = "點我抽取分組";
+            btn.style.pointerEvents = "auto";
+        }
     }
 
     function toggleStartButton() {
@@ -262,7 +279,7 @@
         switchScreen('screen-result');
     }
 
-    // --- HTML Canvas 邏輯 (改為 3 格指板) ---
+    // 3 格 Canvas 指板繪製與點擊計算
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -284,14 +301,14 @@
         let padX = 50, padY = 30;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
-        let fretW = w / 3; // 改為 3 格
+        let fretW = w / 3;
         let stringH = h / 5;
 
-        // 畫琴枕 (Nut)
+        // 畫琴枕
         ctx.fillStyle = '#DDDDCC';
         ctx.fillRect(padX - 8, padY - 5, 12, h + 10);
 
-        // 畫琴桁 (Frets) - 畫出 3 格的邊線
+        // 畫 3 格琴桁
         ctx.strokeStyle = '#888888';
         ctx.lineWidth = 3;
         for (let i = 1; i <= 3; i++) {
@@ -301,7 +318,7 @@
             ctx.stroke();
         }
 
-        // 畫弦 (Strings)
+        // 畫 6 條琴弦
         const stringNames = {1: 'e', 2: 'B', 3: 'G', 4: 'D', 5: 'A', 6: 'E'};
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let y = padY + (stringNum - 1) * stringH; 
@@ -318,7 +335,7 @@
             ctx.fillText(stringNames[stringNum], 15, y + 6);
         }
 
-        // 畫使用者點擊圖示
+        // 畫點擊結果 (空弦、悶音、按壓位置)
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
@@ -351,12 +368,11 @@
         }
     }
 
-    // 處理點擊/觸控事件 (改為 3 格判定)
+    // 手機/電腦精確觸控座標計算
     canvas.addEventListener('pointerdown', (e) => {
         if(isAnswered) return; 
         
         let rect = canvas.getBoundingClientRect();
-        
         let scaleX = canvas.width / rect.width;
         let scaleY = canvas.height / rect.height;
         
@@ -366,10 +382,9 @@
         let padX = 50, padY = 30;
         let w = canvas.width - padX * 2;
         let h = canvas.height - padY * 2;
-        let fretW = w / 3; // 改為 3 格
+        let fretW = w / 3;
         let stringH = h / 5;
 
-        // 判斷點擊哪一弦
         let clickedString = null;
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let strY = padY + (stringNum - 1) * stringH;
@@ -380,7 +395,6 @@
         }
         if (!clickedString) return;
 
-        // 判斷點擊哪一格 (最多判定至第 3 格)
         let clickedFret = -1;
         if (x < padX) {
             clickedFret = 0; 
