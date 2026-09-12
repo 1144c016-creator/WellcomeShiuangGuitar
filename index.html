@@ -135,7 +135,7 @@
         .live-dot {
             display: inline-block; width: 8px; height: 8px;
             background-color: #33CC80; border-radius: 50%;
-            margin-right: 5px; animation: pulse 1.5s infinite;
+            margin-right: 5px; animation: pulse 1s infinite;
         }
         @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.7; }
@@ -181,7 +181,7 @@
                     <p style="color: white; font-weight: bold; font-size: 15px; margin: 0 0 6px 0;">📌 行動指南：</p>
                     <p style="color: var(--warning); margin: 4px 0; font-weight: bold;">Step 1. 請立刻「螢幕截圖」保存組別！</p>
                     <p style="margin: 4px 0;">Step 2. 尋找身邊同組的夥伴，集合在一起。</p>
-                    <p style="margin: 4px 0; font-size: 12px; color: var(--text-sub);">※ 關卡包含「全員解鎖」、「棒次接力」與「合奏分工」，請務必整組一起行動！</p>
+                    <p style="margin: 4px 0; font-size: 12px; color: var(--text-sub);">※ 關卡包含「全員解鎖」、「棒次接力」與「終極合奏」，請務必整組一起行動！</p>
                 </div>
                 
                 <div class="checkbox-container" onclick="toggleCheckboxDirectly(event)">
@@ -224,7 +224,7 @@
             
             <!-- 指板互動區 -->
             <div class="canvas-container">
-                <div class="canvas-instruction">👇 點擊下方指板按鍵 ( 🔴 不彈 / ⭕ 空弦 / 🟢 按琴格 )</div>
+                <div class="canvas-instruction">👇 點擊下方指板按鍵 ( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                 <canvas id="fretboardCanvas"></canvas>
             </div>
             
@@ -272,7 +272,7 @@
 
 <script>
     // ⚠️ 請務必替換為你的 Render 後端網址 ⚠️
-    const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
+    const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com/"; 
 
     const COLOR_PRIMARY = "#33CC80"; 
     const COLOR_DANGER  = "#FF4D4D"; 
@@ -323,7 +323,7 @@
             { type: 'lock', name: '全員獨立解鎖' },
             { type: 'relay', name: '棒次接力模式' },
             { type: 'ensemble', name: '團隊合奏分工' },
-            { type: 'boss', name: 'BOSS 大合奏' }
+            { type: 'boss', name: '終極大合奏 (BOSS)' }
         ];
         return DEFAULT_MODES[index % DEFAULT_MODES.length] || { type: 'lock', name: '全員獨立解鎖' };
     }
@@ -333,7 +333,7 @@
             case 'lock': return '全員獨立解鎖';
             case 'relay': return '棒次接力模式';
             case 'ensemble': return '團隊合奏分工';
-            case 'boss': return 'BOSS 大合奏';
+            case 'boss': return '終極大合奏 (BOSS)';
             default: return type || '標準解謎模式';
         }
     }
@@ -375,7 +375,8 @@
     function startPolling() {
         fetchStatus();
         if (!pollInterval) {
-            pollInterval = setInterval(fetchStatus, 3000);
+            // 🔥 將輪詢間隔改為 1000ms (1秒)，讓讀取與團隊同步感極為流暢
+            pollInterval = setInterval(fetchStatus, 1000);
         }
     }
 
@@ -423,7 +424,7 @@
                 }
             }
         } catch (e) {
-            console.log("連線同步中...", e);
+            console.log("同步數據中...", e);
         }
     }
 
@@ -491,11 +492,20 @@
         isAnswered = false;
         userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
 
-        // 🔥 更新頂部題目資訊（固定不變）
+        // 🔥 更新頂部題目資訊（全程固定可見）
         document.getElementById('target-chord-display').innerText = `${targetChord} 和弦`;
         document.getElementById('mode-badge').innerText = modeObj.name;
         document.getElementById('level-progress-badge').innerText = `關卡 ${currentLevelIndex + 1} / ${myTeamChords.length}`;
         
+        // 更新按鈕預設狀態
+        let btnCheck = document.getElementById('btn-check');
+        btnCheck.className = "btn btn-green";
+        if (modeObj.type === 'ensemble' || modeObj.type === 'boss') {
+            btnCheck.innerText = "✅ 我已按好，點我確認完成";
+        } else {
+            btnCheck.innerText = "送出答案驗證";
+        }
+
         // 更新動態狀態與線索
         document.getElementById('status-text').innerText = `請在下方指板按出 ${targetChord} 和弦按法並點擊驗證`;
         document.getElementById('status-text').style.color = "white";
@@ -526,6 +536,7 @@
         let modeObj = getModeObject(currentLevelIndex);
         let mode = modeObj.type;
         let btnNext = document.getElementById('btn-next');
+        let btnCheck = document.getElementById('btn-check');
         let statusText = document.getElementById('status-text');
 
         if (mode === 'lock') {
@@ -542,23 +553,49 @@
                 isAnswered = true;
             }
         } else if (mode === 'ensemble' || mode === 'boss') {
-            userInput = Object.assign({}, teamData.ensembleFrets);
+            userInput = Object.assign({}, teamData.ensembleFrets || {});
             drawFretboard();
+
+            // 🔥 終極大合奏邏輯：計算有多少隊員按下「完成」
+            let ensembleDone = teamData.ensembleDone || {};
+            let doneCount = Object.values(ensembleDone).filter(v => v === true).length;
+            let myDone = ensembleDone[playerId] || false;
+
             let targetChord = myTeamChords[currentLevelIndex];
             let correct = CHORDS_DB[targetChord] ? CHORDS_DB[targetChord].frets : {6:0,5:0,4:0,3:0,2:0,1:0};
             let isCorrect = true;
             for (let i = 1; i <= 6; i++) {
                 if (userInput[i] !== correct[i]) isCorrect = false;
             }
-            if (isCorrect) {
-                statusText.innerText = `🎉 合奏成功！小隊完美組合出 ${targetChord} 和弦！`;
-                statusText.style.color = COLOR_PRIMARY;
-                btnNext.className = "btn btn-green";
-                btnNext.innerText = "前往下一關 ➔";
-                isAnswered = true;
+
+            // 只有當「最後一名組員按下完成」時才做全隊核對
+            if (doneCount >= totalPlayers && totalPlayers > 0) {
+                if (isCorrect) {
+                    statusText.innerText = `🎉 終極大合奏成功！全員完美合奏出 ${targetChord} 和弦！`;
+                    statusText.style.color = COLOR_PRIMARY;
+                    btnNext.className = "btn btn-green";
+                    btnNext.innerText = "前往下一關 ➔";
+                    btnCheck.className = "btn btn-gray btn-disabled";
+                    btnCheck.innerText = "✅ 全員已確認完畢";
+                    isAnswered = true;
+                } else {
+                    statusText.innerText = `❌ 全員已按下完成，但組合出的和弦有誤 (${doneCount}/${totalPlayers})！請調整按法後重新確認。`;
+                    statusText.style.color = COLOR_DANGER;
+                    btnCheck.className = "btn btn-green";
+                    btnCheck.innerText = "重新點擊確認完成";
+                }
             } else {
-                statusText.innerText = `🎸 合奏分工中：你負責按壓第 [ ${assignedStrings.join(', ')} ] 弦`;
-                statusText.style.color = "var(--accent)";
+                if (myDone) {
+                    statusText.innerText = `✅ 你已點擊完成！等待隊友按下完成中 (${doneCount}/${totalPlayers})`;
+                    statusText.style.color = "var(--warning)";
+                    btnCheck.className = "btn btn-gray btn-disabled";
+                    btnCheck.innerText = "⏳ 等待其他隊員按下完成...";
+                } else {
+                    statusText.innerText = `🎸 合奏分工中：你負責按壓第 [ ${assignedStrings.join(', ')} ] 弦 (進度: ${doneCount}/${totalPlayers})`;
+                    statusText.style.color = "var(--accent)";
+                    btnCheck.className = "btn btn-green";
+                    btnCheck.innerText = "✅ 我已按好，點我確認完成";
+                }
             }
         } else if (mode === 'relay') {
             let turnIndex = teamData.relayTurnIndex || 0;
@@ -618,6 +655,13 @@
                 document.getElementById('status-text').innerText = "❌ 按法有錯！棒次中斷，請重新檢查！";
                 document.getElementById('status-text').style.color = COLOR_DANGER;
             }
+        } else if (mode === 'ensemble' || mode === 'boss') {
+            // 🔥 組員按下完成，紀錄該組員 Ready
+            await fetch(`${API_BASE_URL}/api/action`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_submit', data: { isCorrect } })
+            });
+            fetchStatus();
         }
     }
 
