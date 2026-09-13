@@ -128,6 +128,18 @@
 
         .sub-view { display: none; width: 100%; height: 100%; flex-direction: column; justify-content: center; }
         .sub-view.active { display: flex; }
+
+        /* 管理員儀表板專用樣式 */
+        .admin-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; width: 100%;
+        }
+        .admin-team-card {
+            background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 10px; text-align: left;
+        }
+        .admin-team-card.finished { border-color: var(--primary); background: rgba(51, 204, 128, 0.1); }
+        .admin-status-pill {
+            display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -138,9 +150,11 @@
             <div style="margin: auto 0;">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎸</div>
                 <h1>吉思廣益 - 懸著彈吉他社迎新</h1>
-                <p>歡迎來到吉他社大冒險！請點擊下方按鈕抽取專屬隊伍並與身邊隊員集合。</p>
+                <p>歡迎來到吉他社大冒險！請等待關主開啟遊戲後點擊下方按鈕。</p>
             </div>
-            <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">🎲 點我抽取專屬分組</button>
+            
+            <button class="btn btn-disabled" id="btn-draw" onclick="assignTeam()">⏳ 等待關主開啟遊戲...</button>
+            <button class="btn btn-secondary" style="margin-top: 12px; font-size: 13px; padding: 8px;" onclick="openAdminModal()">⚙️ 管理員入口</button>
         </div>
     </div>
 
@@ -240,6 +254,31 @@
         </div>
     </div>
 
+    <!-- 畫面 5: 管理員儀表板畫面 -->
+    <div id="screen-admin" class="screen">
+        <div class="content-container" style="justify-content: flex-start; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 5px;">
+                <h2 style="color:var(--warning); margin:0;">👑 管理員主控台</h2>
+                <span id="admin-global-status-badge" class="admin-status-pill" style="background:var(--danger); color:white;">🔴 遊戲鎖定中</span>
+            </div>
+
+            <div class="card" style="margin: 8px 0; padding: 10px;">
+                <p style="margin: 0 0 6px 0; font-weight:bold; font-size:13px;">⚙️ 遊戲開關 controls：</p>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-green" id="btn-admin-toggle-global" style="flex:1; margin:0; font-size:14px;" onclick="adminToggleGlobalStart()">🚀 點此開啟遊戲 (允許玩家抽組)</button>
+                    <button class="btn btn-danger" style="width:auto; margin:0; font-size:13px; padding: 0 10px;" onclick="adminResetAll()">🔄 重置全場</button>
+                </div>
+            </div>
+
+            <h3 style="color:var(--accent); margin: 6px 0 2px 0; font-size:15px; text-align:left;">📊 各小隊實體動態監控 (實時更新)</h3>
+            <div class="admin-grid" id="admin-teams-grid">
+                <!-- 動態繪製 4 組卡片 -->
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: auto; font-size: 13px;" onclick="leaveAdminMode()">🚪 退出管理員主控台</button>
+        </div>
+    </div>
+
     <!-- 彈出視窗 1: 等待全組送出 -->
     <div id="modal-waiting" class="overlay-modal">
         <div class="modal-box">
@@ -271,6 +310,29 @@
         </div>
     </div>
 
+    <!-- 彈出視窗 4: 管理員登入 -->
+    <div id="modal-admin-login" class="overlay-modal">
+        <div class="modal-box" style="border-color: var(--accent);">
+            <div style="font-size:36px; margin-bottom:6px;">🔒</div>
+            <h2 style="color: var(--accent); margin: 0 0 10px 0;">管理員身分驗證</h2>
+            
+            <div style="text-align: left; margin-bottom: 12px;">
+                <label style="font-size: 12px; color: var(--text-sub);">管理員帳號：</label>
+                <input type="text" id="admin-user-input" placeholder="請輸入帳號" style="width: 100%; padding: 10px; margin-top: 4px; border-radius: 8px; border: 1px solid var(--card-border); background: #121319; color: white;">
+            </div>
+            
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-size: 12px; color: var(--text-sub);">管理員密碼：</label>
+                <input type="password" id="admin-pass-input" placeholder="請輸入密碼" style="width: 100%; padding: 10px; margin-top: 4px; border-radius: 8px; border: 1px solid var(--card-border); background: #121319; color: white;">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeAdminModal()">取消</button>
+                <button class="btn btn-green" style="flex:1;" onclick="submitAdminLogin()">登入主控台</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     // ⚠️ 請修改為您的 Render 後端網址 ⚠️
     const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
@@ -280,6 +342,8 @@
     let currentLevelIndex = 0;
     let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
     let pollInterval = null;
+    let isGameGlobalStarted = false;
+    let isAdminMode = false;
 
     const CHORDS_DB = {
         "C":  {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0},
@@ -306,6 +370,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        startPolling(); // 開始輪詢監聽全域遊戲狀態
         const savedPlayerId = localStorage.getItem('guitar_player_id');
         const savedTeam = localStorage.getItem('guitar_player_team');
         if (savedPlayerId) {
@@ -313,6 +378,74 @@
         }
     });
 
+    // --- 管理員相關邏輯 ---
+    function openAdminModal() {
+        document.getElementById('modal-admin-login').style.display = 'flex';
+    }
+    function closeAdminModal() {
+        document.getElementById('modal-admin-login').style.display = 'none';
+    }
+
+    async function submitAdminLogin() {
+        const u = document.getElementById('admin-user-input').value.trim();
+        const p = document.getElementById('admin-pass-input').value.trim();
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeAdminModal();
+                isAdminMode = true;
+                switchScreen('screen-admin');
+                fetchStatus();
+            } else {
+                alert("❌ " + (data.error || "登入失敗"));
+            }
+        } catch(e) {
+            alert("⚠️ 登入失敗，請檢查網路連線！");
+        }
+    }
+
+    function leaveAdminMode() {
+        isAdminMode = false;
+        if (myTeam && playerId) {
+            switchScreen('screen-team');
+        } else {
+            switchScreen('screen-start');
+        }
+    }
+
+    async function adminToggleGlobalStart() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/toggle-global-start`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action: isGameGlobalStarted ? 'stop' : 'start' })
+            });
+            const data = await res.json();
+            isGameGlobalStarted = data.isGameGlobalStarted;
+            fetchStatus();
+        } catch(e) {
+            alert("操作失敗！");
+        }
+    }
+
+    async function adminResetAll() {
+        if (!confirm("⚠️ 確定要重置所有隊伍與玩家資料嗎？此操作不可逆！")) return;
+        try {
+            await fetch(`${API_BASE_URL}/api/reset`);
+            alert("所有遊戲資料已全數重置！");
+            fetchStatus();
+        } catch(e) {
+            alert("重置失敗！");
+        }
+    }
+
+    // --- 玩家抽取與遊戲流程 ---
     async function assignTeam(existingId = null, existingTeam = null) {
         const savedPlayerId = existingId || localStorage.getItem('guitar_player_id');
         const savedTeam = existingTeam || localStorage.getItem('guitar_player_team');
@@ -328,6 +461,13 @@
 
             const res = await fetch(url);
             const data = await res.json();
+
+            if (res.status === 403 && data.error === "GAME_NOT_STARTED") {
+                alert("⏳ 遊戲尚未由管理員開啟，請等待活動開始！");
+                if (btn) { btn.className = "btn btn-disabled"; btn.innerText = "⏳ 等待關主開啟遊戲..."; }
+                return;
+            }
+
             playerId = data.playerId;
             myTeam = data.team;
             myName = data.defaultName;
@@ -342,10 +482,9 @@
             document.getElementById('name-preview').innerText = `${myTeam}-${myName}`;
             
             switchScreen('screen-team');
-            startPolling();
         } catch(e) {
             alert("⚠️ 連線失敗，請檢查網路！");
-            if (btn) { btn.innerText = "🎲 點我抽取專屬分組"; btn.style.pointerEvents = "auto"; }
+            if (btn && isGameGlobalStarted) { btn.className = "btn btn-green"; btn.innerText = "🎲 點我抽取專屬分組"; btn.style.pointerEvents = "auto"; }
         }
     }
 
@@ -366,37 +505,61 @@
         fetchStatus();
         if (!pollInterval) pollInterval = setInterval(fetchStatus, 1500);
     }
-    function stopPolling() {
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    }
 
     async function fetchStatus() {
-        if (!myTeam || !playerId) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
+            let url = `${API_BASE_URL}/api/status`;
+            if (myTeam && playerId) {
+                url += `?team=${myTeam}&playerId=${playerId}`;
+            }
+            const res = await fetch(url);
             const data = await res.json();
-            if (!data.teamData) return;
 
+            isGameGlobalStarted = data.isGameGlobalStarted;
+
+            // 1. 更新首頁按鈕狀態 (依據管理員開啟狀態)
+            const btnDraw = document.getElementById('btn-draw');
+            if (btnDraw && document.getElementById('screen-start').classList.contains('active')) {
+                if (isGameGlobalStarted) {
+                    btnDraw.className = "btn btn-green";
+                    btnDraw.innerText = "🎲 點我抽取專屬分組";
+                } else {
+                    btnDraw.className = "btn btn-disabled";
+                    btnDraw.innerText = "⏳ 等待關主開啟遊戲...";
+                }
+            }
+
+            // 2. 如果在管理員主控台，繪製儀表板
+            if (isAdminMode && data.adminDashboard) {
+                renderAdminDashboard(data.isGameGlobalStarted, data.adminDashboard);
+            }
+
+            // 3. 一般隊員遊戲狀態邏輯
+            if (!data.teamData) return;
             const td = data.teamData;
             teamChords = td.chords;
             teamChordsInfo = td.chordsInfo;
 
             const membersContainer = document.getElementById('members-list');
-            membersContainer.innerHTML = td.playersList.map(p => 
-                `<span class="member-badge ${p.isReady ? 'ready' : ''}">${p.fullName} ${p.isReady ? '✓' : ''}</span>`
-            ).join('');
+            if (membersContainer) {
+                membersContainer.innerHTML = td.playersList.map(p => 
+                    `<span class="member-badge ${p.isReady ? 'ready' : ''}">${p.fullName} ${p.isReady ? '✓' : ''}</span>`
+                ).join('');
+            }
 
             const cb = document.getElementById('ready-checkbox');
             if (cb && cb.checked !== td.isMyReady) cb.checked = td.isMyReady;
 
             const btnStart = document.getElementById('btn-start-game');
-            if (td.allReady) {
-                btnStart.className = "btn btn-green"; btnStart.innerText = "🚀 集合完畢，開始遊戲！";
-            } else {
-                btnStart.className = "btn btn-disabled"; btnStart.innerText = `⏳ 等待全員集合 (${td.readyCount}/${td.totalLobbyPlayers})`;
+            if (btnStart) {
+                if (td.allReady) {
+                    btnStart.className = "btn btn-green"; btnStart.innerText = "🚀 集合完畢，開始遊戲！";
+                } else {
+                    btnStart.className = "btn btn-disabled"; btnStart.innerText = `⏳ 等待全員集合 (${td.readyCount}/${td.totalLobbyPlayers})`;
+                }
             }
 
-            if (td.isStarted) {
+            if (td.isStarted && !isAdminMode) {
                 if (document.getElementById('screen-team').classList.contains('active')) {
                     document.getElementById('game-team-name').innerText = `${myTeam}-${myName}`;
                     switchScreen('screen-game');
@@ -434,6 +597,54 @@
         } catch(e) {}
     }
 
+    function renderAdminDashboard(globalStarted, dashboardData) {
+        const badge = document.getElementById('admin-global-status-badge');
+        const toggleBtn = document.getElementById('btn-admin-toggle-global');
+        
+        if (globalStarted) {
+            badge.style.background = "var(--primary)";
+            badge.innerText = "🟢 遊戲開放中";
+            toggleBtn.className = "btn btn-danger";
+            toggleBtn.innerText = "🔒 鎖定/暫停遊戲";
+        } else {
+            badge.style.background = "var(--danger)";
+            badge.innerText = "🔴 遊戲鎖定中";
+            toggleBtn.className = "btn btn-green";
+            toggleBtn.innerText = "🚀 開啟遊戲 (開放玩家抽組)";
+        }
+
+        const grid = document.getElementById('admin-teams-grid');
+        grid.innerHTML = dashboardData.map(t => {
+            const mins = Math.floor(t.elapsedSeconds / 60);
+            const secs = t.elapsedSeconds % 60;
+            const isDone = t.isFinished;
+
+            let statusPill = `<span class="admin-status-pill" style="background:#444; color:#ccc;">大廳待命中</span>`;
+            if (t.isStarted) {
+                statusPill = isDone 
+                    ? `<span class="admin-status-pill" style="background:var(--primary); color:#000;">🏆 全關通關</span>`
+                    : `<span class="admin-status-pill" style="background:var(--accent); color:#000;">🎮 闖關中</span>`;
+            }
+
+            return `
+                <div class="admin-team-card ${isDone ? 'finished' : ''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <strong style="font-size:16px; color:var(--warning);">${t.team}</strong>
+                        ${statusPill}
+                    </div>
+                    <div style="font-size:12px; color:white; line-height:1.5;">
+                        👥 在線人數：<strong>${t.totalPlayers}</strong> 人 (${t.readyCount} 準備)<br>
+                        🚩 進度：${isDone ? '已完成' : `第 ${t.currentLevelIndex + 1} 關 (${t.currentChord})`}<br>
+                        📝 主題：<span style="color:var(--accent);">${t.levelTitle}</span><br>
+                        📥 繳交：${t.submittedCount} / ${t.activeCount} 人<br>
+                        ❌ 答錯：<span style="color:var(--danger);">${t.wrongAttempts}</span> 次<br>
+                        ⏱️ 耗時：${mins}分${secs}秒
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     async function toggleReady() {
         const cb = document.getElementById('ready-checkbox');
         await fetch(`${API_BASE_URL}/api/action`, {
@@ -467,7 +678,6 @@
         document.getElementById('target-hint-hintview').innerText = currentInfo.hint;
         document.getElementById('target-title-answerview').innerText = `關卡：${currentInfo.title}`;
 
-        // 預設切換回線索檢視子頁面
         switchToHintView();
     }
 
@@ -508,7 +718,6 @@
     }
 
     async function finishGame() {
-        stopPolling();
         const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
         const data = await res.json();
         
