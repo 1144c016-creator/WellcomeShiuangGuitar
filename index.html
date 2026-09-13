@@ -51,6 +51,7 @@
         .btn-green { background-color: var(--primary); color: #051a10; }
         .btn-secondary { background-color: #2b2e3e; color: #00E5FF; border: 1px solid var(--accent); }
         .btn-danger { background-color: var(--danger); color: white; }
+        .btn-warning { background-color: var(--warning); color: #000; }
         .btn-disabled { background-color: #2a2c38; color: #66697a; opacity: 0.7; cursor: not-allowed; box-shadow: none; pointer-events: none; }
 
         .card { 
@@ -118,7 +119,7 @@
         }
         .modal-box { 
             background: var(--card-bg); border: 2px solid var(--card-border); 
-            border-radius: 20px; padding: 20px; max-width: 400px; width: 100%; text-align: center; 
+            border-radius: 20px; padding: 20px; max-width: 420px; width: 100%; text-align: center; 
         }
 
         .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -129,13 +130,14 @@
         .sub-view { display: none; width: 100%; height: 100%; flex-direction: column; justify-content: center; }
         .sub-view.active { display: flex; }
 
-        /* 管理員儀表板專用樣式 */
         .admin-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; width: 100%;
         }
         .admin-team-card {
             background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 10px; text-align: left;
+            cursor: pointer; transition: all 0.2s;
         }
+        .admin-team-card:active { transform: scale(0.97); border-color: var(--accent); }
         .admin-team-card.finished { border-color: var(--primary); background: rgba(51, 204, 128, 0.1); }
         .admin-status-pill {
             display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;
@@ -217,7 +219,8 @@
                 </div>
 
                 <div class="canvas-container">
-                    <div class="canvas-instruction">👇 找到關主並得知和弦後，於指板點擊按鍵送出<br>( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
+                    <!-- 修正處：將原本 🔴 不彈 修正為 ❌ 不彈 -->
+                    <div class="canvas-instruction">👇 找到關主並得知和弦後，於指板點擊按鍵送出<br>( ❌ 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                     <canvas id="fretboardCanvas"></canvas>
                 </div>
 
@@ -262,15 +265,35 @@
                 <span id="admin-global-status-badge" class="admin-status-pill" style="background:var(--danger); color:white;">🔴 遊戲鎖定中</span>
             </div>
 
-            <div class="card" style="margin: 8px 0; padding: 10px;">
-                <p style="margin: 0 0 6px 0; font-weight:bold; font-size:13px;">⚙️ 遊戲開關 controls：</p>
+            <!-- 全場總人數看板 -->
+            <div class="card" style="margin: 6px 0; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e2538 0%, #171b29 100%); border-color: var(--accent);">
+                <span style="font-size: 14px; font-weight: bold; color: white;">👥 全場總遊玩人數：</span>
+                <span id="admin-total-players" style="font-size: 20px; font-weight: 900; color: var(--accent);">0 人</span>
+            </div>
+
+            <!-- 廣播推播區塊 -->
+            <div class="card" style="margin: 4px 0; padding: 10px;">
+                <p style="margin: 0 0 6px 0; font-weight:bold; font-size:13px; color:var(--accent);">📢 全場即時廣播推播：</p>
+                <div class="input-group" style="margin: 0;">
+                    <input type="text" id="admin-broadcast-input" placeholder="例：活動剩餘 10 分鐘，請至大禮堂集合！" style="text-align: left; font-size: 13px;">
+                    <button class="btn btn-green" style="width: auto; margin: 0; padding: 0 14px; font-size: 13px;" onclick="adminSendBroadcast()">發送推播</button>
+                </div>
+            </div>
+
+            <!-- 遊戲開關與重置 -->
+            <div class="card" style="margin: 4px 0; padding: 10px;">
+                <p style="margin: 0 0 6px 0; font-weight:bold; font-size:13px;">⚙️ 遊戲開關與管理：</p>
                 <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-green" id="btn-admin-toggle-global" style="flex:1; margin:0; font-size:14px;" onclick="adminToggleGlobalStart()">🚀 點此開啟遊戲 (允許玩家抽組)</button>
+                    <button class="btn btn-green" id="btn-admin-toggle-global" style="flex:1; margin:0; font-size:13px;" onclick="adminToggleGlobalStart()">🚀 開啟遊戲 (開放抽組)</button>
                     <button class="btn btn-danger" style="width:auto; margin:0; font-size:13px; padding: 0 10px;" onclick="adminResetAll()">🔄 重置全場</button>
                 </div>
             </div>
 
-            <h3 style="color:var(--accent); margin: 6px 0 2px 0; font-size:15px; text-align:left;">📊 各小隊實體動態監控 (實時更新)</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 8px 0 2px 0;">
+                <h3 style="color:var(--warning); margin: 0; font-size:15px;">📊 4 大組別監控卡片</h3>
+                <span style="font-size:11px; color:var(--text-sub);">💡 點擊卡片可查看詳細名單與跳關</span>
+            </div>
+            
             <div class="admin-grid" id="admin-teams-grid">
                 <!-- 動態繪製 4 組卡片 -->
             </div>
@@ -333,6 +356,32 @@
         </div>
     </div>
 
+    <!-- 彈出視窗 5: 全場推播廣播 notification -->
+    <div id="modal-broadcast-player" class="overlay-modal">
+        <div class="modal-box" style="border-color: var(--warning);">
+            <div style="font-size:42px; margin-bottom:6px;">📢</div>
+            <h2 style="color: var(--warning); margin: 0 0 10px 0;">大會即時廣播通知</h2>
+            <div id="broadcast-player-msg" style="font-size:16px; color:white; margin:15px 0; line-height:1.6; background:rgba(255, 215, 0, 0.1); padding:14px; border-radius:12px; border:1px solid var(--warning); text-align:left; word-break:break-all;"></div>
+            <button class="btn btn-green" onclick="closeBroadcastModal()">收到 / 了解</button>
+        </div>
+    </div>
+
+    <!-- 彈出視窗 6: 管理員查看組別詳細資料與強制跳關 -->
+    <div id="modal-admin-team-detail" class="overlay-modal">
+        <div class="modal-box" style="border-color: var(--accent); max-width: 440px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 id="detail-team-title" style="color:var(--accent); margin:0;">小隊詳細資訊</h2>
+                <button onclick="closeTeamDetailModal()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">✕</button>
+            </div>
+            <div id="detail-team-content" style="text-align:left; font-size:14px; color:white; line-height:1.6; max-height: 300px; overflow-y: auto;"></div>
+            
+            <div style="margin-top:15px; display:flex; gap:8px;">
+                <button class="btn btn-warning" id="btn-force-pass" style="flex:1;" onclick="adminForcePassTeam()">⚡ 強制此隊跳關</button>
+                <button class="btn btn-secondary" style="width: auto;" onclick="closeTeamDetailModal()">關閉</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     // ⚠️ 請修改為您的 Render 後端網址 ⚠️
     const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
@@ -344,6 +393,9 @@
     let pollInterval = null;
     let isGameGlobalStarted = false;
     let isAdminMode = false;
+    let lastBroadcastId = 0;
+    let selectedDetailTeam = "";
+    let cachedAdminDashboard = [];
 
     const CHORDS_DB = {
         "C":  {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0},
@@ -370,13 +422,18 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        startPolling(); // 開始輪詢監聽全域遊戲狀態
+        startPolling();
         const savedPlayerId = localStorage.getItem('guitar_player_id');
         const savedTeam = localStorage.getItem('guitar_player_team');
         if (savedPlayerId) {
             assignTeam(savedPlayerId, savedTeam);
         }
     });
+
+    // --- 廣播彈窗邏輯 ---
+    function closeBroadcastModal() {
+        document.getElementById('modal-broadcast-player').style.display = 'none';
+    }
 
     // --- 管理員相關邏輯 ---
     function openAdminModal() {
@@ -419,6 +476,24 @@
         }
     }
 
+    async function adminSendBroadcast() {
+        const input = document.getElementById('admin-broadcast-input');
+        const msg = input.value.trim();
+        if (!msg) return alert("請輸入廣播內容！");
+
+        try {
+            await fetch(`${API_BASE_URL}/api/admin/broadcast`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: msg })
+            });
+            input.value = "";
+            alert("📢 全場廣播發送成功！");
+        } catch(e) {
+            alert("廣播發送失敗！");
+        }
+    }
+
     async function adminToggleGlobalStart() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/toggle-global-start`, {
@@ -442,6 +517,63 @@
             fetchStatus();
         } catch(e) {
             alert("重置失敗！");
+        }
+    }
+
+    function openTeamDetailModal(tName) {
+        selectedDetailTeam = tName;
+        const teamData = cachedAdminDashboard.find(t => t.team === tName);
+        if (!teamData) return;
+
+        document.getElementById('detail-team-title').innerText = `【 ${teamData.team} 】詳細戰情`;
+        
+        let mins = Math.floor(teamData.elapsedSeconds / 60);
+        let secs = teamData.elapsedSeconds % 60;
+        
+        let playersHtml = teamData.players.map(p => 
+            `<div style="display:flex; justify-content:space-between; margin:4px 0; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:6px;">
+                <span>👤 ${p.name}</span>
+                <span>${p.isReady ? '<span style="color:var(--primary);">已準備</span>' : '<span style="color:var(--text-sub);">未準備</span>'} ${p.hasSubmitted ? ' | <span style="color:var(--accent);">已繳交</span>' : ''}</span>
+            </div>`
+        ).join('') || '<p style="color:var(--text-sub);">尚無成員加入</p>';
+
+        document.getElementById('detail-team-content').innerHTML = `
+            <div style="margin-bottom:10px; background:var(--bg-color); padding:10px; border-radius:10px;">
+                🚩 當前關卡：<strong>第 ${teamData.currentLevelIndex + 1} 關 (${teamData.currentChord})</strong><br>
+                📜 關卡主題：<span style="color:var(--accent);">${teamData.levelTitle}</span><br>
+                📥 本關繳交進度：<strong>${teamData.submittedCount} / ${teamData.activeCount} 人</strong><br>
+                ❌ 答錯累積次數：<strong style="color:var(--danger);">${teamData.wrongAttempts} 次</strong><br>
+                ⏱️ 累積耗時：<strong>${mins} 分 ${secs} 秒</strong>
+            </div>
+            <p style="font-weight:bold; margin:6px 0 4px 0;">👥 隊員詳細名單 (${teamData.totalPlayers} 人)：</p>
+            ${playersHtml}
+        `;
+
+        document.getElementById('modal-admin-team-detail').style.display = 'flex';
+    }
+
+    function closeTeamDetailModal() {
+        document.getElementById('modal-admin-team-detail').style.display = 'none';
+    }
+
+    async function adminForcePassTeam() {
+        if (!selectedDetailTeam) return;
+        if (!confirm(`⚠️ 確定要幫【 ${selectedDetailTeam} 】強制跳過目前關卡嗎？`)) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/force-pass`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ team: selectedDetailTeam })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`⚡ ${selectedDetailTeam} 已成功強制跳關！`);
+                closeTeamDetailModal();
+                fetchStatus();
+            }
+        } catch(e) {
+            alert("操作失敗！");
         }
     }
 
@@ -517,7 +649,14 @@
 
             isGameGlobalStarted = data.isGameGlobalStarted;
 
-            // 1. 更新首頁按鈕狀態 (依據管理員開啟狀態)
+            // 廣播檢查
+            if (data.broadcast && data.broadcast.id && data.broadcast.id !== lastBroadcastId && data.broadcast.message) {
+                lastBroadcastId = data.broadcast.id;
+                document.getElementById('broadcast-player-msg').innerText = data.broadcast.message;
+                document.getElementById('modal-broadcast-player').style.display = 'flex';
+            }
+
+            // 更新首頁按鈕狀態
             const btnDraw = document.getElementById('btn-draw');
             if (btnDraw && document.getElementById('screen-start').classList.contains('active')) {
                 if (isGameGlobalStarted) {
@@ -529,12 +668,13 @@
                 }
             }
 
-            // 2. 如果在管理員主控台，繪製儀表板
+            // 繪製管理員儀表板
             if (isAdminMode && data.adminDashboard) {
-                renderAdminDashboard(data.isGameGlobalStarted, data.adminDashboard);
+                cachedAdminDashboard = data.adminDashboard;
+                renderAdminDashboard(data.isGameGlobalStarted, data.totalGlobalPlayers, data.adminDashboard);
             }
 
-            // 3. 一般隊員遊戲狀態邏輯
+            // 一般隊員遊戲狀態邏輯
             if (!data.teamData) return;
             const td = data.teamData;
             teamChords = td.chords;
@@ -597,10 +737,12 @@
         } catch(e) {}
     }
 
-    function renderAdminDashboard(globalStarted, dashboardData) {
+    function renderAdminDashboard(globalStarted, totalPlayers, dashboardData) {
         const badge = document.getElementById('admin-global-status-badge');
         const toggleBtn = document.getElementById('btn-admin-toggle-global');
         
+        document.getElementById('admin-total-players').innerText = `${totalPlayers} 人`;
+
         if (globalStarted) {
             badge.style.background = "var(--primary)";
             badge.innerText = "🟢 遊戲開放中";
@@ -610,7 +752,7 @@
             badge.style.background = "var(--danger)";
             badge.innerText = "🔴 遊戲鎖定中";
             toggleBtn.className = "btn btn-green";
-            toggleBtn.innerText = "🚀 開啟遊戲 (開放玩家抽組)";
+            toggleBtn.innerText = "🚀 開啟遊戲 (開放抽組)";
         }
 
         const grid = document.getElementById('admin-teams-grid');
@@ -627,17 +769,16 @@
             }
 
             return `
-                <div class="admin-team-card ${isDone ? 'finished' : ''}">
+                <div class="admin-team-card ${isDone ? 'finished' : ''}" onclick="openTeamDetailModal('${t.team}')">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <strong style="font-size:16px; color:var(--warning);">${t.team}</strong>
+                        <strong style="font-size:16px; color:var(--warning);">${t.team} 🔍</strong>
                         ${statusPill}
                     </div>
                     <div style="font-size:12px; color:white; line-height:1.5;">
-                        👥 在線人數：<strong>${t.totalPlayers}</strong> 人 (${t.readyCount} 準備)<br>
+                        👥 在線：<strong>${t.totalPlayers}</strong> 人<br>
                         🚩 進度：${isDone ? '已完成' : `第 ${t.currentLevelIndex + 1} 關 (${t.currentChord})`}<br>
-                        📝 主題：<span style="color:var(--accent);">${t.levelTitle}</span><br>
                         📥 繳交：${t.submittedCount} / ${t.activeCount} 人<br>
-                        ❌ 答錯：<span style="color:var(--danger);">${t.wrongAttempts}</span> 次<br>
+                        ❌ 錯數：<span style="color:var(--danger);">${t.wrongAttempts}</span> 次<br>
                         ⏱️ 耗時：${mins}分${secs}秒
                     </div>
                 </div>
@@ -795,15 +936,18 @@
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
             if (fretVal === -1) {
+                // 不彈弦：繪製紅色叉叉 ❌
                 ctx.strokeStyle = '#FF4D4D'; ctx.lineWidth = 3;
                 let cx = padX - 22;
                 ctx.beginPath(); ctx.moveTo(cx - 5, y - 5); ctx.lineTo(cx + 5, y + 5);
                 ctx.moveTo(cx - 5, y + 5); ctx.lineTo(cx + 5, y - 5); ctx.stroke();
             } else if (fretVal === 0) {
+                // 空弦：繪製綠色空心圓 ⭕
                 ctx.strokeStyle = '#33CC80'; ctx.lineWidth = 3;
                 let cx = padX - 22;
                 ctx.beginPath(); ctx.arc(cx, y, 6, 0, Math.PI * 2); ctx.stroke();
             } else {
+                // 按格：繪製綠色實心圓 🟢
                 let cx = padX + (fretVal - 0.5) * fretW;
                 ctx.fillStyle = '#33CC80'; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(cx, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
