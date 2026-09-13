@@ -119,7 +119,7 @@
         }
         .modal-box { 
             background: var(--card-bg); border: 2px solid var(--card-border); 
-            border-radius: 20px; padding: 20px; max-width: 420px; width: 100%; text-align: center; 
+            border-radius: 20px; padding: 20px; max-width: 440px; width: 100%; text-align: center; 
         }
 
         .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
@@ -141,6 +141,15 @@
         .admin-team-card.finished { border-color: var(--primary); background: rgba(51, 204, 128, 0.1); }
         .admin-status-pill {
             display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;
+        }
+        .player-row-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); padding: 6px 8px; border-radius: 8px; margin: 4px 0;
+            font-size: 13px;
+        }
+        .team-select {
+            background: #121319; color: var(--accent); border: 1px solid var(--card-border);
+            border-radius: 6px; padding: 2px 4px; font-size: 12px; font-weight: bold;
         }
     </style>
 </head>
@@ -219,7 +228,6 @@
                 </div>
 
                 <div class="canvas-container">
-                    <!-- 修正處：將原本 🔴 不彈 修正為 ❌ 不彈 -->
                     <div class="canvas-instruction">👇 找到關主並得知和弦後，於指板點擊按鍵送出<br>( ❌ 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                     <canvas id="fretboardCanvas"></canvas>
                 </div>
@@ -265,10 +273,13 @@
                 <span id="admin-global-status-badge" class="admin-status-pill" style="background:var(--danger); color:white;">🔴 遊戲鎖定中</span>
             </div>
 
-            <!-- 全場總人數看板 -->
-            <div class="card" style="margin: 6px 0; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #1e2538 0%, #171b29 100%); border-color: var(--accent);">
-                <span style="font-size: 14px; font-weight: bold; color: white;">👥 全場總遊玩人數：</span>
-                <span id="admin-total-players" style="font-size: 20px; font-weight: 900; color: var(--accent);">0 人</span>
+            <!-- 全場總人數與一鍵平分區塊 -->
+            <div class="card" style="margin: 6px 0; padding: 10px 14px; background: linear-gradient(135deg, #1e2538 0%, #171b29 100%); border-color: var(--accent);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size: 14px; font-weight: bold; color: white;">👥 全場總遊玩人數：</span>
+                    <span id="admin-total-players" style="font-size: 20px; font-weight: 900; color: var(--accent);">0 人</span>
+                </div>
+                <button class="btn btn-warning" style="margin-top: 8px; padding: 8px; font-size: 13px;" onclick="adminRebalanceTeams()">⚖️ 一鍵自動平分各組人數 (Auto Balance)</button>
             </div>
 
             <!-- 廣播推播區塊 -->
@@ -291,7 +302,7 @@
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin: 8px 0 2px 0;">
                 <h3 style="color:var(--warning); margin: 0; font-size:15px;">📊 4 大組別監控卡片</h3>
-                <span style="font-size:11px; color:var(--text-sub);">💡 點擊卡片可查看詳細名單與跳關</span>
+                <span style="font-size:11px; color:var(--text-sub);">💡 點擊卡片可查看名單與手動轉組</span>
             </div>
             
             <div class="admin-grid" id="admin-teams-grid">
@@ -366,14 +377,14 @@
         </div>
     </div>
 
-    <!-- 彈出視窗 6: 管理員查看組別詳細資料與強制跳關 -->
+    <!-- 彈出視窗 6: 👑 管理員查看組別詳細資料與調動隊員 -->
     <div id="modal-admin-team-detail" class="overlay-modal">
-        <div class="modal-box" style="border-color: var(--accent); max-width: 440px;">
+        <div class="modal-box" style="border-color: var(--accent); max-width: 480px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h2 id="detail-team-title" style="color:var(--accent); margin:0;">小隊詳細資訊</h2>
                 <button onclick="closeTeamDetailModal()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">✕</button>
             </div>
-            <div id="detail-team-content" style="text-align:left; font-size:14px; color:white; line-height:1.6; max-height: 300px; overflow-y: auto;"></div>
+            <div id="detail-team-content" style="text-align:left; font-size:14px; color:white; line-height:1.6; max-height: 350px; overflow-y: auto;"></div>
             
             <div style="margin-top:15px; display:flex; gap:8px;">
                 <button class="btn btn-warning" id="btn-force-pass" style="flex:1;" onclick="adminForcePassTeam()">⚡ 強制此隊跳關</button>
@@ -396,6 +407,7 @@
     let lastBroadcastId = 0;
     let selectedDetailTeam = "";
     let cachedAdminDashboard = [];
+    const ALL_TEAMS = ['紅組', '藍組', '綠組', '黃組'];
 
     const CHORDS_DB = {
         "C":  {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0},
@@ -430,12 +442,11 @@
         }
     });
 
-    // --- 廣播彈窗邏輯 ---
     function closeBroadcastModal() {
         document.getElementById('modal-broadcast-player').style.display = 'none';
     }
 
-    // --- 管理員相關邏輯 ---
+    // --- 管理員權限與功能 ---
     function openAdminModal() {
         document.getElementById('modal-admin-login').style.display = 'flex';
     }
@@ -513,13 +524,29 @@
         if (!confirm("⚠️ 確定要重置所有隊伍與玩家資料嗎？此操作不可逆！")) return;
         try {
             await fetch(`${API_BASE_URL}/api/reset`);
-            alert("所有遊戲資料已全數重置！");
+            alert("所有遊戲資料已成功重置！");
             fetchStatus();
         } catch(e) {
             alert("重置失敗！");
         }
     }
 
+    // 👑【新增功能】一鍵平分人數
+    async function adminRebalanceTeams() {
+        if (!confirm("⚖️ 確定要由系統自動將全場隊員平均分發到 4 個小隊嗎？")) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/rebalance-teams`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                fetchStatus();
+            }
+        } catch(e) {
+            alert("平分失敗！");
+        }
+    }
+
+    // 👑【新增功能】開啟隊員名單彈窗與線上即時轉組
     function openTeamDetailModal(tName) {
         selectedDetailTeam = tName;
         const teamData = cachedAdminDashboard.find(t => t.team === tName);
@@ -530,12 +557,26 @@
         let mins = Math.floor(teamData.elapsedSeconds / 60);
         let secs = teamData.elapsedSeconds % 60;
         
-        let playersHtml = teamData.players.map(p => 
-            `<div style="display:flex; justify-content:space-between; margin:4px 0; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:6px;">
-                <span>👤 ${p.name}</span>
-                <span>${p.isReady ? '<span style="color:var(--primary);">已準備</span>' : '<span style="color:var(--text-sub);">未準備</span>'} ${p.hasSubmitted ? ' | <span style="color:var(--accent);">已繳交</span>' : ''}</span>
-            </div>`
-        ).join('') || '<p style="color:var(--text-sub);">尚無成員加入</p>';
+        let playersHtml = teamData.players.map(p => {
+            let selectOptions = ALL_TEAMS.map(t => 
+                `<option value="${t}" ${t === teamData.team ? 'selected disabled' : ''}>轉至 ${t}</option>`
+            ).join('');
+
+            return `
+                <div class="player-row-item">
+                    <div>
+                        <strong>👤 ${p.name}</strong> 
+                        <span style="font-size:11px; color:var(--text-sub);">(${p.isReady ? '已就緒' : '未就緒'})</span>
+                    </div>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <select class="team-select" onchange="adminMovePlayer('${p.id}', this.value)">
+                            ${selectOptions}
+                        </select>
+                        <button style="background:var(--danger); border:none; color:white; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;" onclick="adminKickPlayer('${p.id}', '${p.name}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('') || '<p style="color:var(--text-sub);">尚無成員加入此組</p>';
 
         document.getElementById('detail-team-content').innerHTML = `
             <div style="margin-bottom:10px; background:var(--bg-color); padding:10px; border-radius:10px;">
@@ -545,11 +586,48 @@
                 ❌ 答錯累積次數：<strong style="color:var(--danger);">${teamData.wrongAttempts} 次</strong><br>
                 ⏱️ 累積耗時：<strong>${mins} 分 ${secs} 秒</strong>
             </div>
-            <p style="font-weight:bold; margin:6px 0 4px 0;">👥 隊員詳細名單 (${teamData.totalPlayers} 人)：</p>
+            <p style="font-weight:bold; margin:6px 0 4px 0; color:var(--warning);">👥 隊員管理名單 (${teamData.totalPlayers} 人)：</p>
             ${playersHtml}
         `;
 
         document.getElementById('modal-admin-team-detail').style.display = 'flex';
+    }
+
+    // 👑【新增功能】管理員執行手動移動隊員
+    async function adminMovePlayer(pId, targetTeam) {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/move-player`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ playerId: pId, targetTeam })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchStatus();
+                setTimeout(() => openTeamDetailModal(selectedDetailTeam), 300);
+            }
+        } catch(e) {
+            alert("移動失敗！");
+        }
+    }
+
+    // 👑【新增功能】管理員手動踢出隊員
+    async function adminKickPlayer(pId, pName) {
+        if (!confirm(`確定要將隊員【 ${pName} 】移出活動嗎？`)) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/kick-player`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ playerId: pId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchStatus();
+                setTimeout(() => openTeamDetailModal(selectedDetailTeam), 300);
+            }
+        } catch(e) {
+            alert("移除失敗！");
+        }
     }
 
     function closeTeamDetailModal() {
@@ -674,63 +752,72 @@
                 renderAdminDashboard(data.isGameGlobalStarted, data.totalGlobalPlayers, data.adminDashboard);
             }
 
-            // 一般隊員遊戲狀態邏輯
-            if (!data.teamData) return;
-            const td = data.teamData;
-            teamChords = td.chords;
-            teamChordsInfo = td.chordsInfo;
-
-            const membersContainer = document.getElementById('members-list');
-            if (membersContainer) {
-                membersContainer.innerHTML = td.playersList.map(p => 
-                    `<span class="member-badge ${p.isReady ? 'ready' : ''}">${p.fullName} ${p.isReady ? '✓' : ''}</span>`
-                ).join('');
-            }
-
-            const cb = document.getElementById('ready-checkbox');
-            if (cb && cb.checked !== td.isMyReady) cb.checked = td.isMyReady;
-
-            const btnStart = document.getElementById('btn-start-game');
-            if (btnStart) {
-                if (td.allReady) {
-                    btnStart.className = "btn btn-green"; btnStart.innerText = "🚀 集合完畢，開始遊戲！";
-                } else {
-                    btnStart.className = "btn btn-disabled"; btnStart.innerText = `⏳ 等待全員集合 (${td.readyCount}/${td.totalLobbyPlayers})`;
-                }
-            }
-
-            if (td.isStarted && !isAdminMode) {
-                if (document.getElementById('screen-team').classList.contains('active')) {
-                    document.getElementById('game-team-name').innerText = `${myTeam}-${myName}`;
-                    switchScreen('screen-game');
-                    loadLevel(td.currentLevelIndex);
+            // 隊員端被管理員手動調動的無縫自動同步邏輯
+            if (data.teamData) {
+                if (data.teamData.isMovedByAdmin) {
+                    myTeam = data.teamData.actualTeam;
+                    localStorage.setItem('guitar_player_team', myTeam);
+                    document.getElementById('display-team').innerText = myTeam;
+                    document.getElementById('name-preview').innerText = `${myTeam}-${myName}`;
+                    alert(`📢 大會已將您重新分配至【${myTeam}】！`);
                 }
 
-                if (document.getElementById('screen-game').classList.contains('active')) {
-                    if (td.currentLevelIndex !== currentLevelIndex) {
-                        currentLevelIndex = td.currentLevelIndex;
-                        loadLevel(currentLevelIndex);
-                    }
+                const td = data.teamData;
+                teamChords = td.chords;
+                teamChordsInfo = td.chordsInfo;
 
-                    if (td.hasSubmitted && (!td.levelResult || td.levelResult.status === 'pending')) {
-                        document.getElementById('modal-waiting').style.display = 'flex';
-                        document.getElementById('waiting-status-text').innerText = `目前已繳交：${td.submittedCount} / ${td.totalPlayers} 人`;
+                const membersContainer = document.getElementById('members-list');
+                if (membersContainer) {
+                    membersContainer.innerHTML = td.playersList.map(p => 
+                        `<span class="member-badge ${p.isReady ? 'ready' : ''}">${p.fullName} ${p.isReady ? '✓' : ''}</span>`
+                    ).join('');
+                }
+
+                const cb = document.getElementById('ready-checkbox');
+                if (cb && cb.checked !== td.isMyReady) cb.checked = td.isMyReady;
+
+                const btnStart = document.getElementById('btn-start-game');
+                if (btnStart) {
+                    if (td.allReady) {
+                        btnStart.className = "btn btn-green"; btnStart.innerText = "🚀 集合完畢，開始遊戲！";
                     } else {
-                        document.getElementById('modal-waiting').style.display = 'none';
+                        btnStart.className = "btn btn-disabled"; btnStart.innerText = `⏳ 等待全員集合 (${td.readyCount}/${td.totalLobbyPlayers})`;
+                    }
+                }
+
+                if (td.isStarted && !isAdminMode) {
+                    if (document.getElementById('screen-team').classList.contains('active')) {
+                        document.getElementById('game-team-name').innerText = `${myTeam}-${myName}`;
+                        switchScreen('screen-game');
+                        loadLevel(td.currentLevelIndex);
                     }
 
-                    if (td.levelResult) {
-                        if (td.levelResult.status === 'passed') {
-                            document.getElementById('modal-success').style.display = 'flex';
-                            document.getElementById('modal-failed').style.display = 'none';
-                        } else if (td.levelResult.status === 'failed') {
-                            document.getElementById('wrong-players-list').innerText = td.levelResult.wrongPlayers.join(', ');
-                            document.getElementById('modal-failed').style.display = 'flex';
-                            document.getElementById('modal-success').style.display = 'none';
+                    if (document.getElementById('screen-game').classList.contains('active')) {
+                        if (td.currentLevelIndex !== currentLevelIndex) {
+                            currentLevelIndex = td.currentLevelIndex;
+                            loadLevel(currentLevelIndex);
                         }
-                    } else {
-                        document.getElementById('modal-success').style.display = 'none';
-                        document.getElementById('modal-failed').style.display = 'none';
+
+                        if (td.hasSubmitted && (!td.levelResult || td.levelResult.status === 'pending')) {
+                            document.getElementById('modal-waiting').style.display = 'flex';
+                            document.getElementById('waiting-status-text').innerText = `目前已繳交：${td.submittedCount} / ${td.totalPlayers} 人`;
+                        } else {
+                            document.getElementById('modal-waiting').style.display = 'none';
+                        }
+
+                        if (td.levelResult) {
+                            if (td.levelResult.status === 'passed') {
+                                document.getElementById('modal-success').style.display = 'flex';
+                                document.getElementById('modal-failed').style.display = 'none';
+                            } else if (td.levelResult.status === 'failed') {
+                                document.getElementById('wrong-players-list').innerText = td.levelResult.wrongPlayers.join(', ');
+                                document.getElementById('modal-failed').style.display = 'flex';
+                                document.getElementById('modal-success').style.display = 'none';
+                            }
+                        } else {
+                            document.getElementById('modal-success').style.display = 'none';
+                            document.getElementById('modal-failed').style.display = 'none';
+                        }
                     }
                 }
             }
