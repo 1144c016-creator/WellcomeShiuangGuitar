@@ -180,15 +180,15 @@
                     <p style="color: white; font-weight: bold; font-size: 15px; margin: 0 0 6px 0;">📌 行動指南：</p>
                     <p style="color: var(--warning); margin: 4px 0; font-weight: bold;">Step 1. 請立刻「螢幕截圖」保存組別！</p>
                     <p style="margin: 4px 0;">Step 2. 尋找身邊同組的夥伴，集合在一起。</p>
-                    <p style="margin: 4px 0; font-size: 12px; color: var(--text-sub);">※ 關卡包含「全員解鎖」、「棒次接力」與「終極合奏」，請務必整組一起行動！</p>
+                    <p style="margin: 4px 0; font-size: 12px; color: var(--text-sub);">※ 請全組隊員都勾選「集合完畢」後再起跑！</p>
                 </div>
                 
                 <div class="checkbox-container" onclick="toggleCheckboxDirectly(event)">
-                    <input type="checkbox" id="team-ready-checkbox" onchange="toggleStartButton()">
+                    <input type="checkbox" id="team-ready-checkbox" onchange="onReadyCheckboxChange()">
                     <label for="team-ready-checkbox" id="ready-label">我們全組隊員已集合完畢！</label>
                 </div>
             </div>
-            <button class="btn btn-disabled" id="btn-start-game" onclick="startGame()">🚀 進入第一個關卡！</button>
+            <button class="btn btn-disabled" id="btn-start-game" onclick="startGame()">⏳ 等待全員集合完畢</button>
         </div>
     </div>
 
@@ -205,7 +205,7 @@
                         <span class="live-dot"></span>隊友解謎進行中
                     </p>
                     <p id="spectate-status-msg" style="color: white; font-size: 15px; margin: 6px 0;">
-                        隊友目前正進行第 1 關，請先與隊友會合！
+                        隊友目前正進行中，請先與隊友會合！
                     </p>
                     <p style="color: var(--text-sub); font-size: 13px; margin-top: 12px;">
                         💡 隊友完成當前關卡後，系統將自動為您切換至【下一關】正式加入合奏！
@@ -318,7 +318,6 @@
     let totalPlayers = 1;
 
     let pollInterval = null;
-    let spectateUntilLevel = null; 
 
     function getModeObject(index) {
         let rawMode = (levelModes && levelModes[index]) ? levelModes[index] : null;
@@ -392,43 +391,55 @@
         try {
             const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
             const data = await res.json();
-            
-            if (data.teamCounts && data.teamCounts[myTeam] !== undefined) {
-                const count = data.teamCounts[myTeam];
-                document.getElementById('display-count').innerHTML = `<span class="live-dot"></span>本組已簽到：<strong style="font-size: 22px;">${count}</strong> 人`;
-                document.getElementById('game-team-count').innerHTML = `<span class="live-dot"></span>隊員: <strong style="font-size: 14px;">${count} 人</strong>`;
-            }
 
             if (data.teamData) {
                 totalPlayers = data.teamData.totalPlayers || 1;
                 playerIndex = data.teamData.playerIndex || 0;
                 if (data.teamData.levelModes) levelModes = data.teamData.levelModes;
 
+                const readyCount = data.teamData.readyCount || 0;
+                const totalLobby = data.teamData.totalLobbyPlayers || 1;
+                const allReady = data.teamData.allReady || false;
+
+                // 更新大廳簽到與 Ready 人數
+                document.getElementById('display-count').innerHTML = `<span class="live-dot"></span>已簽到隊員：<strong style="font-size: 20px;">${totalLobby}</strong> 人（已準備 <strong style="color:var(--primary); font-size: 20px;">${readyCount}/${totalLobby}</strong> 人）`;
+                document.getElementById('game-team-count').innerHTML = `<span class="live-dot"></span>隊員: <strong style="font-size: 14px;">${totalPlayers} 人</strong>`;
+
+                // 同步本身的 Checkbox 勾選狀態
+                const cb = document.getElementById('team-ready-checkbox');
+                if (cb && cb.checked !== data.teamData.isMyReady) {
+                    cb.checked = data.teamData.isMyReady;
+                }
+
+                // 控制大廳按鈕啟用/停用
+                const btnStart = document.getElementById('btn-start-game');
+                if (allReady) {
+                    btnStart.className = "btn btn-green";
+                    btnStart.innerText = "🚀 進入第一個關卡！";
+                } else {
+                    btnStart.className = "btn btn-disabled";
+                    btnStart.innerText = `⏳ 等待全員集合完畢 (${readyCount}/${totalLobby})`;
+                }
+
                 let serverLevel = data.teamData.currentLevelIndex || 0;
 
-                if (spectateUntilLevel === null && data.teamData.isStarted && document.getElementById('screen-team').classList.contains('active')) {
-                    spectateUntilLevel = serverLevel + 1;
-                    switchScreen('screen-spectate');
-                }
-
-                if (spectateUntilLevel !== null) {
-                    if (serverLevel < spectateUntilLevel) {
+                // 處理遊戲發起與中途加入邏輯
+                if (data.teamData.isStarted) {
+                    if (data.teamData.isSpectating) {
+                        // 當前關卡未包含我（中途加入）：前往觀戰畫面
+                        if (!document.getElementById('screen-spectate').classList.contains('active')) {
+                            switchScreen('screen-spectate');
+                        }
                         document.getElementById('spectate-status-msg').innerHTML = `隊友目前正進行 <strong style="color:var(--warning); font-size:18px;">第 ${serverLevel + 1} 關</strong><br>請先尋找同組夥伴會合！`;
-                        return;
                     } else {
-                        spectateUntilLevel = null;
-                        document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
-                        currentLevelIndex = serverLevel;
-                        switchScreen('screen-game');
-                        loadQuestion();
+                        // 正常參賽者（或從觀戰解鎖進入新關卡）：切換至遊戲畫面
+                        if (document.getElementById('screen-team').classList.contains('active') || document.getElementById('screen-spectate').classList.contains('active')) {
+                            document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
+                            currentLevelIndex = serverLevel;
+                            switchScreen('screen-game');
+                            loadQuestion();
+                        }
                     }
-                }
-
-                if (data.teamData.isStarted && document.getElementById('screen-team').classList.contains('active')) {
-                    document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
-                    currentLevelIndex = 0;
-                    switchScreen('screen-game');
-                    loadQuestion();
                 }
 
                 calcAssignedStrings();
@@ -451,31 +462,46 @@
         assignedStrings = list.length > 0 ? list : [1];
     }
 
-    function toggleStartButton() {
-        let isChecked = document.getElementById('team-ready-checkbox').checked;
-        document.getElementById('btn-start-game').className = isChecked ? "btn btn-green" : "btn btn-disabled";
+    async function onReadyCheckboxChange() {
+        const cb = document.getElementById('team-ready-checkbox');
+        try {
+            await fetch(`${API_BASE_URL}/api/action`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ playerId, team: myTeam, action: 'toggle_ready', data: { isReady: cb.checked } })
+            });
+            fetchStatus();
+        } catch (e) { console.error(e); }
     }
 
     function toggleCheckboxDirectly(e) {
         if (e.target.tagName !== 'INPUT') {
             const cb = document.getElementById('team-ready-checkbox');
             cb.checked = !cb.checked;
-            toggleStartButton();
+            onReadyCheckboxChange();
         }
     }
 
     async function startGame() {
-        if (!document.getElementById('team-ready-checkbox').checked) {
-            alert("請先勾選確認框喔！"); return;
-        }
+        const btn = document.getElementById('btn-start-game');
+        if (btn.classList.contains('btn-disabled')) return;
+
         document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
-        switchScreen('screen-game');
-        currentLevelIndex = 0;
-        loadQuestion();
-        fetch(`${API_BASE_URL}/api/action`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
-        });
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/action`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+            } else {
+                currentLevelIndex = 0;
+                switchScreen('screen-game');
+                loadQuestion();
+            }
+        } catch (e) {
+            alert("連線發生錯誤");
+        }
     }
 
     function loadQuestion() {
