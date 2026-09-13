@@ -324,14 +324,10 @@
         let rawMode = (levelModes && levelModes[index]) ? levelModes[index] : null;
         if (rawMode && typeof rawMode === 'object') {
             let type = rawMode.type || 'lock';
-            let name = rawMode.name || getModeNameByType(type);
-            return { type, name };
+            return { type, name: rawMode.name || getModeNameByType(type) };
         }
-        if (typeof rawMode === 'string') {
-            let type = rawMode;
-            let name = getModeNameByType(type);
-            return { type, name };
-        }
+        if (typeof rawMode === 'string') return { type: rawMode, name: getModeNameByType(rawMode) };
+        
         const DEFAULT_MODES = [
             { type: 'lock', name: '全員獨立解鎖' },
             { type: 'relay', name: '棒次接力模式' },
@@ -357,20 +353,16 @@
     function switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
-        if(screenId === 'screen-game') {
-            setTimeout(initCanvas, 100); 
-        }
+        if(screenId === 'screen-game') setTimeout(initCanvas, 100); 
     }
 
     async function assignTeam() {
         const btn = document.getElementById('btn-draw');
         btn.innerText = "⏳ 連線分配組別中...";
         btn.style.pointerEvents = "none";
-
         try {
             const response = await fetch(`${API_BASE_URL}/api/assign-team`);
             const data = await response.json();
-
             playerId = data.playerId;
             myTeam = data.team;
             if (data.chords && Array.isArray(data.chords)) myTeamChords = data.chords;
@@ -379,11 +371,9 @@
             document.getElementById('display-team').innerText = myTeam;
             document.getElementById('spectate-team-name').innerText = `【 ${myTeam} 】`;
             switchScreen('screen-team');
-
             startPolling();
-
         } catch (error) {
-            alert("⚠️ 連線失敗！請確認 Render 伺服器網址是否設定正確或已正常運行。");
+            alert("⚠️ 連線失敗！請確認 Render 伺服器是否運行。");
             btn.innerText = "🎲 點我抽取專屬分組";
             btn.style.pointerEvents = "auto";
         }
@@ -391,16 +381,10 @@
 
     function startPolling() {
         fetchStatus();
-        if (!pollInterval) {
-            pollInterval = setInterval(fetchStatus, 500);
-        }
+        if (!pollInterval) pollInterval = setInterval(fetchStatus, 500);
     }
-
     function stopPolling() {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-        }
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
     }
 
     async function fetchStatus() {
@@ -411,31 +395,25 @@
             
             if (data.teamCounts && data.teamCounts[myTeam] !== undefined) {
                 const count = data.teamCounts[myTeam];
-                document.getElementById('display-count').innerHTML = 
-                    `<span class="live-dot"></span>本組已簽到：<strong style="font-size: 22px;">${count}</strong> 人`;
-                document.getElementById('game-team-count').innerHTML = 
-                    `<span class="live-dot"></span>隊員: <strong style="font-size: 14px;">${count} 人</strong>`;
+                document.getElementById('display-count').innerHTML = `<span class="live-dot"></span>本組已簽到：<strong style="font-size: 22px;">${count}</strong> 人`;
+                document.getElementById('game-team-count').innerHTML = `<span class="live-dot"></span>隊員: <strong style="font-size: 14px;">${count} 人</strong>`;
             }
 
             if (data.teamData) {
                 totalPlayers = data.teamData.totalPlayers || 1;
                 playerIndex = data.teamData.playerIndex || 0;
-                if (data.teamData.levelModes && Array.isArray(data.teamData.levelModes)) {
-                    levelModes = data.teamData.levelModes;
-                }
+                if (data.teamData.levelModes) levelModes = data.teamData.levelModes;
 
                 let serverLevel = data.teamData.currentLevelIndex || 0;
 
-                if (spectateUntilLevel === null && data.teamData.isStarted && 
-                    document.getElementById('screen-team').classList.contains('active')) {
+                if (spectateUntilLevel === null && data.teamData.isStarted && document.getElementById('screen-team').classList.contains('active')) {
                     spectateUntilLevel = serverLevel + 1;
                     switchScreen('screen-spectate');
                 }
 
                 if (spectateUntilLevel !== null) {
                     if (serverLevel < spectateUntilLevel) {
-                        document.getElementById('spectate-status-msg').innerHTML = 
-                            `隊友目前正進行 <strong style="color:var(--warning); font-size:18px;">第 ${serverLevel + 1} 關</strong><br>請先尋找同組夥伴會合！`;
+                        document.getElementById('spectate-status-msg').innerHTML = `隊友目前正進行 <strong style="color:var(--warning); font-size:18px;">第 ${serverLevel + 1} 關</strong><br>請先尋找同組夥伴會合！`;
                         return;
                     } else {
                         spectateUntilLevel = null;
@@ -446,8 +424,7 @@
                     }
                 }
 
-                if (data.teamData.isStarted && 
-                    document.getElementById('screen-team').classList.contains('active')) {
+                if (data.teamData.isStarted && document.getElementById('screen-team').classList.contains('active')) {
                     document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
                     currentLevelIndex = 0;
                     switchScreen('screen-game');
@@ -455,21 +432,17 @@
                 }
 
                 calcAssignedStrings();
-
                 if (document.getElementById('screen-game').classList.contains('active')) {
                     syncGameState(data.teamData);
                 }
             }
         } catch (e) {
-            console.log("同步數據中...", e);
+            console.log("連線同步中...");
         }
     }
 
     function calcAssignedStrings() {
-        if (totalPlayers <= 1) {
-            assignedStrings = [1, 2, 3, 4, 5, 6];
-            return;
-        }
+        if (totalPlayers <= 1) { assignedStrings = [1, 2, 3, 4, 5, 6]; return; }
         let list = [];
         for (let s = 1; s <= 6; s++) {
             let owner = Math.min(Math.floor((s - 1) / (6 / totalPlayers)), totalPlayers - 1);
@@ -492,37 +465,22 @@
     }
 
     async function startGame() {
-        const checkbox = document.getElementById('team-ready-checkbox');
-        if (!checkbox.checked) {
-            alert("請先勾選「我們全組隊員已集合完畢」的確認框喔！");
-            return;
+        if (!document.getElementById('team-ready-checkbox').checked) {
+            alert("請先勾選確認框喔！"); return;
         }
-
         document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
         switchScreen('screen-game');
-        
         currentLevelIndex = 0;
         loadQuestion();
-
-        try {
-            await fetch(`${API_BASE_URL}/api/action`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
-            });
-        } catch (err) {
-            console.warn("背景發送開賽訊息失敗：", err);
-        }
+        fetch(`${API_BASE_URL}/api/action`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
+        });
     }
 
     function loadQuestion() {
-        if (!myTeamChords || myTeamChords.length === 0) {
-            myTeamChords = ["C", "G", "Am", "Em", "F", "D", "C7"];
-        }
-        if (currentLevelIndex >= myTeamChords.length) {
-            finishGame();
-            return;
-        }
+        if (!myTeamChords || myTeamChords.length === 0) myTeamChords = ["C", "G", "Am", "Em", "F", "D", "C7"];
+        if (currentLevelIndex >= myTeamChords.length) { finishGame(); return; }
 
         let targetChord = myTeamChords[currentLevelIndex];
         let modeObj = getModeObject(currentLevelIndex);
@@ -535,11 +493,7 @@
         
         let btnCheck = document.getElementById('btn-check');
         btnCheck.className = "btn btn-green";
-        if (modeObj.type === 'ensemble' || modeObj.type === 'boss') {
-            btnCheck.innerText = "✅ 我已按好，點我確認完成";
-        } else {
-            btnCheck.innerText = "送出答案驗證";
-        }
+        btnCheck.innerText = (modeObj.type === 'ensemble' || modeObj.type === 'boss') ? "✅ 我已按好，點我確認完成" : "送出答案驗證";
 
         document.getElementById('status-text').innerText = `請在下方指板按出 ${targetChord} 和弦按法並點擊驗證`;
         document.getElementById('status-text').style.color = "white";
@@ -556,7 +510,6 @@
         let btnNext = document.getElementById('btn-next');
         btnNext.className = "btn btn-gray btn-disabled";
         btnNext.innerText = "⏳ 等待過關";
-
         setTimeout(drawFretboard, 100);
     }
 
@@ -567,8 +520,7 @@
             return;
         }
 
-        let modeObj = getModeObject(currentLevelIndex);
-        let mode = modeObj.type;
+        let mode = getModeObject(currentLevelIndex).type;
         let btnNext = document.getElementById('btn-next');
         let btnCheck = document.getElementById('btn-check');
         let statusText = document.getElementById('status-text');
@@ -582,17 +534,13 @@
             }
             if (solvedCount >= totalPlayers && totalPlayers > 0) {
                 statusText.innerText = `🎉 全員答對！請點擊下方按鈕前往下一關`;
-                btnNext.className = "btn btn-green";
-                btnNext.innerText = "前往下一關 ➔";
+                btnNext.className = "btn btn-green"; btnNext.innerText = "前往下一關 ➔";
                 isAnswered = true;
             }
         } else if (mode === 'ensemble' || mode === 'boss') {
-            // 合併伺服器端全組琴弦按法
             if (teamData.ensembleFrets) {
                 for (let s = 1; s <= 6; s++) {
-                    if (teamData.ensembleFrets[s] !== undefined) {
-                        userInput[s] = teamData.ensembleFrets[s];
-                    }
+                    if (teamData.ensembleFrets[s] !== undefined) userInput[s] = teamData.ensembleFrets[s];
                 }
             }
             drawFretboard();
@@ -612,45 +560,40 @@
                 if (isCorrect) {
                     statusText.innerText = `🎉 終極大合奏成功！全員完美合奏出 ${targetChord} 和弦！`;
                     statusText.style.color = COLOR_PRIMARY;
-                    btnNext.className = "btn btn-green";
-                    btnNext.innerText = "前往下一關 ➔";
-                    btnCheck.className = "btn btn-gray btn-disabled";
-                    btnCheck.innerText = "✅ 全員合奏通過";
+                    btnNext.className = "btn btn-green"; btnNext.innerText = "前往下一關 ➔";
+                    btnCheck.className = "btn btn-gray btn-disabled"; btnCheck.innerText = "✅ 全員合奏通過";
                     isAnswered = true;
                 } else {
-                    statusText.innerText = `❌ 全員已按下完成，但組合出的和弦有誤 (${doneCount}/${totalPlayers})！請大家調整按法。`;
+                    statusText.innerText = `❌ 和弦組合錯誤 (${doneCount}/${totalPlayers})！請大家檢查指板，只要有人重按琴弦即可重新送出！`;
                     statusText.style.color = COLOR_DANGER;
-                    btnCheck.className = "btn btn-green";
-                    btnCheck.innerText = "🔄 我已修正按法，點我重新確認";
+                    btnCheck.className = "btn btn-gray btn-disabled";
+                    btnCheck.innerText = "⚠️ 請重新調整琴弦";
+                    isAnswered = false; 
                 }
             } else {
+                isAnswered = false;
                 if (myDone) {
                     statusText.innerText = `✅ 你已點擊完成！等待隊友中 (${doneCount}/${totalPlayers})`;
                     statusText.style.color = "var(--warning)";
-                    btnCheck.className = "btn btn-gray btn-disabled";
-                    btnCheck.innerText = "⏳ 已確認，等待隊友...";
+                    btnCheck.className = "btn btn-gray btn-disabled"; btnCheck.innerText = "⏳ 已確認，等待隊友...";
                 } else {
-                    statusText.innerText = `🎸 合奏分工中：你負責按壓第 [ ${assignedStrings.join(', ')} ] 弦 (已完成: ${doneCount}/${totalPlayers})`;
+                    statusText.innerText = `🎸 合奏分工中：你負責第 [ ${assignedStrings.join(', ')} ] 弦 (已確認: ${doneCount}/${totalPlayers})`;
                     statusText.style.color = "var(--accent)";
-                    btnCheck.className = "btn btn-green";
-                    btnCheck.innerText = "✅ 我已按好，點我確認完成";
+                    btnCheck.className = "btn btn-green"; btnCheck.innerText = "✅ 我已按好，點我確認完成";
                 }
             }
         } else if (mode === 'relay') {
             let turnIndex = teamData.relayTurnIndex || 0;
             if (turnIndex >= totalPlayers) {
-                statusText.innerText = `🎉 棒次接力成功！全員順利過關！`;
-                statusText.style.color = COLOR_PRIMARY;
-                btnNext.className = "btn btn-green";
-                btnNext.innerText = "前往下一關 ➔";
+                statusText.innerText = `🎉 棒次接力成功！`; statusText.style.color = COLOR_PRIMARY;
+                btnNext.className = "btn btn-green"; btnNext.innerText = "前往下一關 ➔";
                 isAnswered = true;
             } else {
-                let isMyTurn = (turnIndex % totalPlayers) === playerIndex;
-                if (isMyTurn) {
-                    statusText.innerText = `⚡ 輪到你了！(第 ${turnIndex + 1}/${totalPlayers} 棒) 請按對和弦並送出！`;
+                if ((turnIndex % totalPlayers) === playerIndex) {
+                    statusText.innerText = `⚡ 輪到你了！(第 ${turnIndex + 1}/${totalPlayers} 棒) 請送出正確指法！`;
                     statusText.style.color = COLOR_PRIMARY;
                 } else {
-                    statusText.innerText = `⏳ 等待隊友接力中 (目前為第 ${turnIndex + 1}/${totalPlayers} 棒)...`;
+                    statusText.innerText = `⏳ 等待隊友接力中 (目前第 ${turnIndex + 1}/${totalPlayers} 棒)...`;
                     statusText.style.color = "var(--warning)";
                 }
             }
@@ -659,8 +602,7 @@
 
     async function handleButtonClick() {
         if (isAnswered) return;
-        let modeObj = getModeObject(currentLevelIndex);
-        let mode = modeObj.type;
+        let mode = getModeObject(currentLevelIndex).type;
         let targetChord = myTeamChords[currentLevelIndex];
         let correct = CHORDS_DB[targetChord] ? CHORDS_DB[targetChord].frets : {};
         let isCorrect = true;
@@ -695,20 +637,25 @@
             } else {
                 document.getElementById('status-text').innerText = "❌ 按法有錯！棒次中斷，請重新檢查！";
                 document.getElementById('status-text').style.color = COLOR_DANGER;
+                await fetch(`${API_BASE_URL}/api/action`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ playerId, team: myTeam, action: 'relay_submit', data: { isCorrect: false } })
+                });
             }
         } else if (mode === 'ensemble' || mode === 'boss') {
-            // 🔥 立即顯示按鈕傳送中視覺樣式
             btnCheck.className = "btn btn-gray btn-disabled";
             btnCheck.innerText = "⏳ 傳送確認中...";
 
-            try {
-                await fetch(`${API_BASE_URL}/api/action`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_submit' })
-                });
-            } catch(e) {
-                console.error("提交失敗", e);
-            }
+            let myFrets = {};
+            assignedStrings.forEach(s => { myFrets[s] = userInput[s]; });
+
+            await fetch(`${API_BASE_URL}/api/action`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    playerId, team: myTeam, action: 'ensemble_submit', 
+                    data: { frets: myFrets }
+                })
+            });
             fetchStatus();
         }
     }
@@ -720,21 +667,15 @@
             body: JSON.stringify({ playerId, team: myTeam, action: 'next_level' })
         });
         const data = await res.json();
-        if (data.isFinished) {
-            finishGame();
-        } else {
-            fetchStatus();
-        }
+        if (data.isFinished) finishGame(); else fetchStatus();
     }
 
     async function finishGame() {
         stopPolling();
-
         const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
         const data = await res.json();
         
         document.getElementById('result-team').innerText = `【 ${myTeam} 】`;
-        
         let myTeamRank = (data.leaderboard && data.leaderboard.find(l => l.team === myTeam)) || {};
         let mins = Math.floor((myTeamRank.finishTimeSeconds || 0) / 60);
         let secs = (myTeamRank.finishTimeSeconds || 0) % 60;
@@ -746,26 +687,15 @@
 
         let tbody = document.getElementById('leaderboard-body');
         tbody.innerHTML = "";
-        if (data.leaderboard && Array.isArray(data.leaderboard)) {
+        if (data.leaderboard) {
             data.leaderboard.forEach((item, index) => {
                 let tr = document.createElement('tr');
                 if (item.team === myTeam) tr.className = "my-team-row";
-                
-                let timeDisplay = item.isFinished 
-                    ? `${Math.floor(item.finishTimeSeconds/60)}分${item.finishTimeSeconds%60}秒` 
-                    : `關卡 ${item.currentLevel}`;
-
-                tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.team}</td>
-                    <td>${item.memberCount} 人</td>
-                    <td>${timeDisplay}</td>
-                    <td>${item.wrongAttempts}</td>
-                `;
+                let timeDisplay = item.isFinished ? `${Math.floor(item.finishTimeSeconds/60)}分${item.finishTimeSeconds%60}秒` : `關卡 ${item.currentLevel}`;
+                tr.innerHTML = `<td>${index + 1}</td><td>${item.team}</td><td>${item.memberCount} 人</td><td>${timeDisplay}</td><td>${item.wrongAttempts || 0}</td>`;
                 tbody.appendChild(tr);
             });
         }
-
         switchScreen('screen-result');
     }
 
@@ -775,25 +705,19 @@
     function initCanvas() {
         let rect = canvas.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
-            canvas.width = rect.width; 
-            canvas.height = rect.height;
-            drawFretboard();
+            canvas.width = rect.width; canvas.height = rect.height; drawFretboard();
         }
     }
-
     window.addEventListener('resize', () => {
         if (document.getElementById('screen-game').classList.contains('active')) initCanvas();
     });
 
     function drawFretboard() {
         if (canvas.width === 0 || canvas.height === 0) return;
-        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         let padX = 42, padY = 22;
-        let w = canvas.width - padX * 2;
-        let h = canvas.height - padY * 2;
-        let fretW = w / 3;
-        let stringH = h / 5;
+        let w = canvas.width - padX * 2, h = canvas.height - padY * 2;
+        let fretW = w / 3, stringH = h / 5;
 
         ctx.fillStyle = '#E6E6D8'; ctx.fillRect(padX - 8, padY - 5, 10, h + 10);
         ctx.strokeStyle = '#606478'; ctx.lineWidth = 2;
@@ -801,34 +725,27 @@
             ctx.beginPath(); ctx.moveTo(padX + i * fretW, padY); ctx.lineTo(padX + i * fretW, padY + h); ctx.stroke();
         }
 
-        let modeObj = getModeObject(currentLevelIndex);
-        let mode = modeObj.type;
-
+        let mode = getModeObject(currentLevelIndex).type;
         const stringNames = {1: '1弦(e)', 2: '2弦(B)', 3: '3弦(G)', 4: '4弦(D)', 5: '5弦(A)', 6: '6弦(E)'};
+        
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let y = padY + (stringNum - 1) * stringH; 
             let isMine = (mode === 'ensemble' || mode === 'boss') ? assignedStrings.includes(stringNum) : true;
-
-            ctx.strokeStyle = isMine ? (mode === 'ensemble' || mode === 'boss' ? '#00E5FF' : '#B0B5C8') : '#363948';
+            ctx.strokeStyle = isMine ? ((mode === 'ensemble' || mode === 'boss') ? '#00E5FF' : '#B0B5C8') : '#363948';
             ctx.lineWidth = isMine ? 2.5 + ((stringNum - 1) * 0.4) : 1;
             ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + w, y); ctx.stroke();
-
             ctx.fillStyle = isMine ? '#FFFFFF' : '#555868';
-            ctx.font = 'bold 11px Arial';
-            ctx.fillText(stringNames[stringNum], 4, y + 4);
+            ctx.font = 'bold 11px Arial'; ctx.fillText(stringNames[stringNum], 4, y + 4);
         }
 
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
-            
             if (fretVal === -1) {
                 ctx.strokeStyle = COLOR_DANGER; ctx.lineWidth = 3;
                 let cx = padX - 22;
-                ctx.beginPath();
-                ctx.moveTo(cx - 5, y - 5); ctx.lineTo(cx + 5, y + 5);
-                ctx.moveTo(cx - 5, y + 5); ctx.lineTo(cx + 5, y - 5);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(cx - 5, y - 5); ctx.lineTo(cx + 5, y + 5);
+                ctx.moveTo(cx - 5, y + 5); ctx.lineTo(cx + 5, y - 5); ctx.stroke();
             } else if (fretVal === 0) {
                 ctx.strokeStyle = COLOR_PRIMARY; ctx.lineWidth = 3;
                 let cx = padX - 22;
@@ -837,11 +754,7 @@
                 let cx = padX + (fretVal - 0.5) * fretW;
                 ctx.fillStyle = COLOR_PRIMARY; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(cx, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                
-                ctx.fillStyle = '#000000';
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#000000'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(fretVal.toString(), cx, y);
             }
         }
@@ -849,61 +762,35 @@
 
     canvas.addEventListener('pointerdown', async (e) => {
         if(isAnswered) return; 
-
-        let modeObj = getModeObject(currentLevelIndex);
-        let mode = modeObj.type;
-
-        if (mode === 'relay') {
-            const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
-            const data = await res.json();
-            let turnIndex = data.teamData.relayTurnIndex || 0;
-            if ((turnIndex % totalPlayers) !== playerIndex) return;
-        }
+        let mode = getModeObject(currentLevelIndex).type;
 
         let rect = canvas.getBoundingClientRect();
-        let scaleX = canvas.width / rect.width;
-        let scaleY = canvas.height / rect.height;
-        let x = (e.clientX - rect.left) * scaleX;
-        let y = (e.clientY - rect.top) * scaleY;
-        
-        let padX = 42, padY = 22;
-        let w = canvas.width - padX * 2, h = canvas.height - padY * 2;
+        let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+        let x = (e.clientX - rect.left) * scaleX, y = (e.clientY - rect.top) * scaleY;
+        let padX = 42, padY = 22, w = canvas.width - padX * 2, h = canvas.height - padY * 2;
         let fretW = w / 3, stringH = h / 5;
 
         let clickedString = null;
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
-            let strY = padY + (stringNum - 1) * stringH;
-            if (Math.abs(y - strY) < stringH / 1.5) {
-                clickedString = stringNum; break;
-            }
+            if (Math.abs(y - (padY + (stringNum - 1) * stringH)) < stringH / 1.5) { clickedString = stringNum; break; }
         }
         if (!clickedString) return;
-
-        if ((mode === 'ensemble' || mode === 'boss') && !assignedStrings.includes(clickedString)) {
-            return;
-        }
+        if ((mode === 'ensemble' || mode === 'boss') && !assignedStrings.includes(clickedString)) return;
 
         let clickedFret = -1;
-        if (x < padX) {
-            clickedFret = 0; 
-        } else {
+        if (x < padX) clickedFret = 0; 
+        else {
             for (let i = 1; i <= 3; i++) {
-                if (x >= padX + (i-1)*fretW && x <= padX + i*fretW) {
-                    clickedFret = i; break;
-                }
+                if (x >= padX + (i-1)*fretW && x <= padX + i*fretW) { clickedFret = i; break; }
             }
         }
 
         userInput[clickedString] = (userInput[clickedString] === clickedFret) ? -1 : clickedFret;
         drawFretboard();
 
-        // 🔥 只傳送自己負責的琴弦按法，不覆蓋隊友
         if (mode === 'ensemble' || mode === 'boss') {
             let myFrets = {};
-            assignedStrings.forEach(s => {
-                myFrets[s] = userInput[s];
-            });
-
+            assignedStrings.forEach(s => myFrets[s] = userInput[s]);
             await fetch(`${API_BASE_URL}/api/action`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_update', data: { frets: myFrets } })
