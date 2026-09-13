@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>吉思廣益 - 懸著彈吉他社迎新解謎</title>
+    <title>吉思廣益 - 懸著彈吉他社迎新活動</title>
     <style>
         :root {
             --bg-color: #121319;
@@ -161,7 +161,7 @@
             <div style="margin: auto 0;">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎸</div>
                 <h1>吉思廣益 - 懸著彈吉他社迎新</h1>
-                <p>歡迎來到吉他社大冒險！請等待關主開啟遊戲後點擊下方按鈕。</p>
+                <p>歡迎來到吉思廣益！請等待關主開啟遊戲後點擊下方按鈕。</p>
             </div>
             
             <button class="btn btn-disabled" id="btn-draw" onclick="assignTeam()">⏳ 等待關主開啟遊戲...</button>
@@ -215,9 +215,9 @@
                     <div style="font-size: 12px; font-weight: bold; color: var(--accent); letter-spacing: 1px;">📜 任務線索簡報</div>
                     <div id="target-title-hintview" class="target-title-display">關卡主題</div>
                     <div id="target-hint-hintview" class="target-hint-display">載入提示中...</div>
-                    <p style="font-size: 13px; color: var(--warning); margin-top: 10px;">💡 請依照線索尋找現場關主，完成實體任務取得和弦圖後，再點擊下方按鈕進行答題！</p>
+                    <p style="font-size: 13px; color: var(--warning); margin-top: 10px;">💡 請依照線索完成任務取得和弦圖，再點擊下方按鈕進行答題！</p>
                 </div>
-                <button class="btn btn-green" onclick="switchToAnswerView()">🎸 我已完成現場任務，前往答題 ➔</button>
+                <button class="btn btn-green" onclick="switchToAnswerView()">🎸 我已完成任務，前往答題 ➔</button>
             </div>
 
             <!-- 子畫面 B: 和弦指板答題介面 -->
@@ -228,13 +228,13 @@
                 </div>
 
                 <div class="canvas-container">
-                    <div class="canvas-instruction">👇 找到關主並得知和弦後，於指板點擊按鍵送出<br>( ❌ 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
+                    <div class="canvas-instruction">👇 完成任務得知和弦後，於指板點擊按鍵並送出<br>( ❌ 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                     <canvas id="fretboardCanvas"></canvas>
                 </div>
 
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" style="flex: 1;" onclick="switchToHintView()">↩️ 返回線索</button>
-                    <button class="btn btn-green" id="btn-submit-answer" style="flex: 2;" onclick="submitAnswer()">📤 送出驗證</button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="switchToHintView()">↩️ 返回</button>
+                    <button class="btn btn-green" id="btn-submit-answer" style="flex: 2;" onclick="submitAnswer()">📤 送出</button>
                 </div>
             </div>
         </div>
@@ -244,7 +244,7 @@
     <div id="screen-result" class="screen">
         <div class="content-container" style="justify-content: flex-start; overflow-y: auto;">
             <div style="font-size: 45px; margin-top: 10px;">🎉</div>
-            <h1 style="margin: 4px 0;">迎新大冒險全數通關！</h1>
+            <h1 style="margin: 4px 0;">恭喜全數通關！</h1>
             
             <div class="card" style="margin: 8px 0; padding: 14px; text-align: center;">
                 <h2 id="result-team" style="color: var(--primary); margin: 2px 0; font-size: 26px;"></h2>
@@ -339,7 +339,7 @@
             <h2 style="color: var(--danger);">回答錯誤！</h2>
             <p style="color: white; margin-bottom: 4px;">以下成員的指法不正確：</p>
             <div id="wrong-players-list" style="color: var(--warning); font-weight: bold; margin: 10px 0; font-size: 16px;"></div>
-            <p style="font-size: 13px; color:var(--text-sub);">請全組對照指法重新調整挑戰！</p>
+            <p style="font-size: 13px; color:var(--text-sub);">請全組對照指法重新答題！</p>
             <button class="btn btn-danger" onclick="retryLevel()">🔄 重新挑戰本關</button>
         </div>
     </div>
@@ -371,9 +371,9 @@
     <div id="modal-broadcast-player" class="overlay-modal">
         <div class="modal-box" style="border-color: var(--warning);">
             <div style="font-size:42px; margin-bottom:6px;">📢</div>
-            <h2 style="color: var(--warning); margin: 0 0 10px 0;">大會即時廣播通知</h2>
+            <h2 style="color: var(--warning); margin: 0 0 10px 0;">即時廣播通知</h2>
             <div id="broadcast-player-msg" style="font-size:16px; color:white; margin:15px 0; line-height:1.6; background:rgba(255, 215, 0, 0.1); padding:14px; border-radius:12px; border:1px solid var(--warning); text-align:left; word-break:break-all;"></div>
-            <button class="btn btn-green" onclick="closeBroadcastModal()">收到 / 了解</button>
+            <button class="btn btn-green" onclick="closeBroadcastModal()">收到</button>
         </div>
     </div>
 
@@ -533,7 +533,7 @@
 
     // 👑【新增功能】一鍵平分人數
     async function adminRebalanceTeams() {
-        if (!confirm("⚖️ 確定要由系統自動將全場隊員平均分發到 4 個小隊嗎？")) return;
+        if (!confirm("⚖️ 是否將全場隊員平分到 4 個小隊？")) return;
         try {
             const res = await fetch(`${API_BASE_URL}/api/admin/rebalance-teams`, { method: 'POST' });
             const data = await res.json();
@@ -673,7 +673,7 @@
             const data = await res.json();
 
             if (res.status === 403 && data.error === "GAME_NOT_STARTED") {
-                alert("⏳ 遊戲尚未由管理員開啟，請等待活動開始！");
+                alert("⏳ 遊戲尚未開啟，請等待活動開始！");
                 if (btn) { btn.className = "btn btn-disabled"; btn.innerText = "⏳ 等待關主開啟遊戲..."; }
                 return;
             }
@@ -694,7 +694,7 @@
             switchScreen('screen-team');
         } catch(e) {
             alert("⚠️ 連線失敗，請檢查網路！");
-            if (btn && isGameGlobalStarted) { btn.className = "btn btn-green"; btn.innerText = "🎲 點我抽取專屬分組"; btn.style.pointerEvents = "auto"; }
+            if (btn && isGameGlobalStarted) { btn.className = "btn btn-green"; btn.innerText = "🎲 點我抽取組別"; btn.style.pointerEvents = "auto"; }
         }
     }
 
@@ -739,7 +739,7 @@
             if (btnDraw && document.getElementById('screen-start').classList.contains('active')) {
                 if (isGameGlobalStarted) {
                     btnDraw.className = "btn btn-green";
-                    btnDraw.innerText = "🎲 點我抽取專屬分組";
+                    btnDraw.innerText = "🎲 點我抽取組別";
                 } else {
                     btnDraw.className = "btn btn-disabled";
                     btnDraw.innerText = "⏳ 等待關主開啟遊戲...";
@@ -851,7 +851,7 @@
             let statusPill = `<span class="admin-status-pill" style="background:#444; color:#ccc;">大廳待命中</span>`;
             if (t.isStarted) {
                 statusPill = isDone 
-                    ? `<span class="admin-status-pill" style="background:var(--primary); color:#000;">🏆 全關通關</span>`
+                    ? `<span class="admin-status-pill" style="background:var(--primary); color:#000;">🏆 全數通關</span>`
                     : `<span class="admin-status-pill" style="background:var(--accent); color:#000;">🎮 闖關中</span>`;
             }
 
