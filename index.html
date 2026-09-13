@@ -84,17 +84,17 @@
             border: 2px solid var(--accent);
             box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
             border-radius: 16px;
-            padding: 12px 16px;
+            padding: 16px;
             margin-bottom: 8px;
             text-align: center;
         }
         .target-hint-display {
-            font-size: 14px; font-weight: bold; color: #FFFFFF; line-height: 1.4;
+            font-size: 15px; font-weight: bold; color: #FFFFFF; line-height: 1.5;
             margin: 4px 0 2px 0; word-break: break-all;
         }
 
         .canvas-container {
-            flex: 1; width: 100%; min-height: 180px; max-height: 340px;
+            flex: 1; width: 100%; min-height: 180px; max-height: 320px;
             margin: 4px 0 8px 0; position: relative;
             display: flex; flex-direction: column;
         }
@@ -171,22 +171,37 @@
     <!-- 畫面 3: 遊戲關卡 -->
     <div id="screen-game" class="screen">
         <div class="content-container">
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:8px;">
                 <span id="game-team-name" style="color:var(--primary); font-weight:bold;"></span>
                 <span id="level-badge" style="background:#2b2e3e; padding:3px 10px; border-radius:12px; color:var(--warning);">關卡 1 / 5</span>
             </div>
 
-            <div class="target-card">
-                <div style="font-size: 12px; font-weight: bold; color: var(--accent);">🔍 本關任務線索</div>
-                <div id="target-hint" class="target-hint-display">載入提示中...</div>
+            <!-- 階段一：線索提示畫面 -->
+            <div id="game-step-hint" style="display: flex; flex-direction: column; flex: 1; justify-content: center; width: 100%;">
+                <div class="target-card" style="margin-bottom: 16px; padding: 20px 16px;">
+                    <div style="font-size: 16px; font-weight: bold; color: var(--accent); margin-bottom: 8px;">🔍 本關任務線索</div>
+                    <div id="target-hint" class="target-hint-display" style="font-size: 15px; line-height: 1.6;">載入提示中...</div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px;">請隊友依照提示尋找關主完成任務，獲得和弦後點擊下方按鈕答題。</p>
+                <button class="btn btn-green" style="font-size: 18px; padding: 16px;" onclick="showAnswerView()">🎸 前往答題</button>
             </div>
 
-            <div class="canvas-container">
-                <div class="canvas-instruction">👇 找到關主並獲得和弦後，於指板點擊按鍵送出<br>( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
-                <canvas id="fretboardCanvas"></canvas>
-            </div>
+            <!-- 階段二：和弦答題畫面 -->
+            <div id="game-step-answer" style="display: none; flex-direction: column; flex: 1; width: 100%;">
+                <div class="target-card" style="padding: 8px 12px; margin-bottom: 4px;">
+                    <div style="font-size: 12px; color: var(--accent); font-weight: bold;">🔍 線索速記：<span id="target-hint-mini" style="color: white; font-weight: normal;"></span></div>
+                </div>
 
-            <button class="btn btn-green" id="btn-submit-answer" onclick="submitAnswer()">📤 送出個人答案並等待驗證</button>
+                <div class="canvas-container">
+                    <div class="canvas-instruction">👇 請在指板上記錄關主給予的和弦<br>( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
+                    <canvas id="fretboardCanvas"></canvas>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button class="btn" style="background: #2a2d3d; flex: 1; margin: 0; padding: 12px; font-size: 14px;" onclick="showHintView()">🔙 查看線索</button>
+                    <button class="btn btn-green" id="btn-submit-answer" style="flex: 2; margin: 0; padding: 12px; font-size: 15px;" onclick="submitAnswer()">📤 送出答案</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -268,7 +283,17 @@
     function switchScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if (id === 'screen-game') setTimeout(initCanvas, 100);
+    }
+
+    function showHintView() {
+        document.getElementById('game-step-hint').style.display = 'flex';
+        document.getElementById('game-step-answer').style.display = 'none';
+    }
+
+    function showAnswerView() {
+        document.getElementById('game-step-hint').style.display = 'none';
+        document.getElementById('game-step-answer').style.display = 'flex';
+        setTimeout(initCanvas, 50);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -427,13 +452,12 @@
         }
         userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
         document.getElementById('level-badge').innerText = `關卡 ${currentLevelIndex + 1} / ${teamChords.length}`;
-        document.getElementById('target-hint').innerText = teamHints ? teamHints[currentLevelIndex] : "請閱讀線索尋找關主！";
         
-        const btnSub = document.getElementById('btn-submit-answer');
-        btnSub.className = "btn btn-green";
-        btnSub.innerText = "📤 送出個人答案並等待驗證";
+        const hintText = teamHints ? teamHints[currentLevelIndex] : "請閱讀線索尋找關主！";
+        document.getElementById('target-hint').innerText = hintText;
+        document.getElementById('target-hint-mini').innerText = hintText.length > 25 ? hintText.substring(0, 25) + '...' : hintText;
         
-        drawFretboard();
+        showHintView();
     }
 
     async function submitAnswer() {
@@ -463,7 +487,7 @@
     async function retryLevel() {
         document.getElementById('modal-failed').style.display = 'none';
         userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
-        drawFretboard();
+        showAnswerView();
 
         await fetch(`${API_BASE_URL}/api/action`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -511,7 +535,7 @@
         }
     }
     window.addEventListener('resize', () => {
-        if (document.getElementById('screen-game').classList.contains('active')) initCanvas();
+        if (document.getElementById('game-step-answer').style.display === 'flex') initCanvas();
     });
 
     function drawFretboard() {
