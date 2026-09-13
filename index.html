@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>吉他社迎新解謎大冒險</title>
+    <title>吉思廣益-懸著彈吉他社迎新</title>
     <style>
         :root {
             --bg-color: #121319;
@@ -89,7 +89,7 @@
             text-align: center;
         }
         .target-hint-display {
-            font-size: 15px; font-weight: bold; color: #FFFFFF; line-height: 1.4;
+            font-size: 14px; font-weight: bold; color: #FFFFFF; line-height: 1.4;
             margin: 4px 0 2px 0; word-break: break-all;
         }
 
@@ -129,8 +129,8 @@
         <div class="content-container">
             <div style="margin: auto 0;">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎸</div>
-                <h1>吉他社迎新解謎大冒險</h1>
-                <p>歡迎來到吉他社！請點擊下方按鈕抽取專屬隊伍並與身邊隊員集合。</p>
+                <h1>吉思廣益 - 懸著彈吉他社迎新</h1>
+                <p>歡迎來到吉他社冒險！點擊下方按鈕抽取小隊，與隊員集合展開解謎。</p>
             </div>
             <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">🎲 點我抽取專屬分組</button>
         </div>
@@ -144,7 +144,7 @@
                 <div class="team-name" id="display-team">--</div>
                 
                 <div class="card">
-                    <p style="margin:0 0 6px 0; font-weight:bold; color:white;">👤 設定個人名稱：</p>
+                    <p style="margin:0 0 6px 0; font-weight:bold; color:white;">👤 設定個人暱稱：</p>
                     <div class="input-group">
                         <input type="text" id="custom-name-input" placeholder="輸入名字 (例如: 小明)" maxlength="8">
                         <button class="btn btn-green" style="width: auto; margin:0; padding:0 15px;" onclick="saveCustomName()">儲存</button>
@@ -159,7 +159,7 @@
 
                 <div class="card" style="text-align:center;">
                     <label style="cursor:pointer; font-weight:bold; font-size:15px; color:white;">
-                        <input type="checkbox" id="ready-checkbox" onchange="toggleReady()" style="width:18px; height:18px; vertical-align:middle;"> 我已集合完畢準備就緒！
+                        <input type="checkbox" id="ready-checkbox" onchange="toggleReady()" style="width:18px; height:18px; vertical-align:middle;"> 全員到齊，準備就緒！
                     </label>
                 </div>
             </div>
@@ -173,7 +173,7 @@
         <div class="content-container">
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px;">
                 <span id="game-team-name" style="color:var(--primary); font-weight:bold;"></span>
-                <span id="level-badge" style="background:#2b2e3e; padding:3px 10px; border-radius:12px; color:var(--warning);">關卡 1 / 7</span>
+                <span id="level-badge" style="background:#2b2e3e; padding:3px 10px; border-radius:12px; color:var(--warning);">關卡 1 / 5</span>
             </div>
 
             <div class="target-card">
@@ -182,7 +182,7 @@
             </div>
 
             <div class="canvas-container">
-                <div class="canvas-instruction">👇 找到關主並得知和弦後，於指板點擊按鍵送出<br>( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
+                <div class="canvas-instruction">👇 找到關主並獲得和弦後，於指板點擊按鍵送出<br>( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                 <canvas id="fretboardCanvas"></canvas>
             </div>
 
@@ -194,14 +194,14 @@
     <div id="screen-result" class="screen">
         <div class="content-container" style="justify-content: flex-start; overflow-y: auto;">
             <div style="font-size: 45px; margin-top: 10px;">🎉</div>
-            <h1 style="margin: 4px 0;">冒險任務全數通關！</h1>
+            <h1 style="margin: 4px 0;">迎新解謎冒險全數通關！</h1>
             
             <div class="card" style="margin: 8px 0; padding: 14px; text-align: center;">
                 <h2 id="result-team" style="color: var(--primary); margin: 2px 0; font-size: 26px;"></h2>
                 <p id="result-stats" style="color: white; font-size: 15px; margin: 6px 0; line-height: 1.6;"></p>
             </div>
 
-            <h3 style="color: var(--warning); margin: 10px 0 4px 0; font-size: 16px; text-align: left;">🏆 活動各組排行榜</h3>
+            <h3 style="color: var(--warning); margin: 10px 0 4px 0; font-size: 16px; text-align: left;">🏆 活動總排行榜</h3>
             <div style="overflow-x: auto;">
                 <table class="leaderboard-table">
                     <thead>
@@ -256,14 +256,13 @@
     let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
     let pollInterval = null;
 
+    // 5 個基礎和弦指法定義
     const CHORDS_DB = {
-        "C": {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0},
-        "G": {6: 3, 5: 2, 4: 0, 3: 0, 2: 0, 1: 3},
+        "C":  {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0},
         "Am": {6: -1, 5: 0, 4: 2, 3: 2, 2: 1, 1: 0},
+        "G":  {6: 3, 5: 2, 4: 0, 3: 0, 2: 0, 1: 3},
         "Em": {6: 0, 5: 2, 4: 2, 3: 0, 2: 0, 1: 0},
-        "F": {6: 1, 5: 3, 4: 3, 3: 2, 2: 1, 1: 1},
-        "D": {6: -1, 5: -1, 4: 0, 3: 2, 2: 3, 1: 2},
-        "C7": {6: -1, 5: 3, 4: 2, 3: 3, 2: 1, 1: 0}
+        "D":  {6: -1, 5: -1, 4: 0, 3: 2, 2: 3, 1: 2}
     };
 
     function switchScreen(id) {
