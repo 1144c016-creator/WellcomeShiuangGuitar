@@ -49,7 +49,7 @@
         }
         .btn:active { transform: scale(0.97); opacity: 0.9; }
         .btn-green { background-color: var(--primary); color: #051a10; }
-        .btn-gray { background-color: #3a3d4d; color: #888d9e; }
+        .btn-danger { background-color: var(--danger); color: white; }
         .btn-disabled { background-color: #2a2c38; color: #66697a; opacity: 0.7; cursor: not-allowed; box-shadow: none; pointer-events: none; }
 
         .card { 
@@ -62,28 +62,23 @@
         }
 
         .team-name { 
-            font-size: 34px; font-weight: 900; color: var(--primary); 
-            margin: 6px 0; text-shadow: 0 0 15px rgba(51, 204, 128, 0.3); 
+            font-size: 38px; font-weight: 900; color: var(--primary); 
+            margin: 10px 0; text-shadow: 0 0 15px rgba(51, 204, 128, 0.3); 
             text-align: center;
         }
-        
-        .input-group {
-            display: flex; gap: 8px; margin: 10px 0;
-        }
-        .name-input {
-            flex: 1; background: #121319; border: 1px solid var(--card-border);
-            border-radius: 10px; color: white; padding: 10px 12px; font-size: 15px; font-weight: bold;
-        }
-        .name-input:focus { outline: none; border-color: var(--accent); }
 
-        .member-list {
-            max-height: 120px; overflow-y: auto; margin-top: 8px; padding-right: 4px;
+        .input-group { display: flex; gap: 8px; margin: 8px 0; }
+        .input-group input { 
+            flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); 
+            background: #121319; color: white; font-size: 15px; text-align: center; 
         }
-        .member-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 6px 10px; background: #151722; border-radius: 8px; margin-bottom: 4px; font-size: 13px;
+
+        .member-badge { 
+            display: inline-block; background: #2a2d3d; padding: 4px 10px; 
+            border-radius: 12px; margin: 3px; font-size: 13px; border: 1px solid var(--card-border); 
         }
-        
+        .member-badge.ready { border-color: var(--primary); color: var(--primary); font-weight: bold; }
+
         .target-card {
             background: linear-gradient(135deg, #1e2538 0%, #171b29 100%);
             border: 2px solid var(--accent);
@@ -91,46 +86,38 @@
             border-radius: 16px;
             padding: 12px 16px;
             margin-bottom: 8px;
-            text-align: left;
+            text-align: center;
         }
-        .target-header { display: flex; justify-content: space-between; align-items: center; }
-        .target-chord-display { font-size: 30px; font-weight: 900; color: #FFFFFF; }
-        .mode-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #3b82f6; color: white; }
+        .target-chord-display {
+            font-size: 32px; font-weight: 900; color: #FFFFFF; text-shadow: 0 0 10px rgba(255,255,255,0.4);
+            margin: 2px 0;
+        }
 
-        .game-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-        .level-progress-badge { background-color: #2b2e3e; padding: 3px 10px; border-radius: 12px; color: var(--warning); font-size: 13px; }
-
-        .canvas-container { flex: 1; width: 100%; min-height: 180px; max-height: 340px; margin: 4px 0 8px 0; display: flex; flex-direction: column; }
-        canvas { background-color: var(--card-bg); border-radius: 14px; border: 1px solid var(--card-border); width: 100%; height: 100%; touch-action: none; }
-
-        .checkbox-container {
-            display: flex; align-items: center; justify-content: center;
-            margin: 10px 0; gap: 8px; font-size: 15px; color: white; font-weight: bold;
-            cursor: pointer; background-color: var(--card-bg); padding: 10px; border-radius: 12px;
+        .canvas-container {
+            flex: 1; width: 100%; min-height: 180px; max-height: 340px;
+            margin: 4px 0 8px 0; position: relative;
+            display: flex; flex-direction: column;
+        }
+        .canvas-instruction {
+            font-size: 12px; color: var(--text-sub); margin-bottom: 4px; font-weight: bold; text-align: center;
+        }
+        canvas {
+            background-color: var(--card-bg); border-radius: 14px;
             border: 1px solid var(--card-border);
+            width: 100%; height: 100%; touch-action: none;
         }
-        .checkbox-container input { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary); }
 
-        .live-dot { display: inline-block; width: 8px; height: 8px; background-color: #33CC80; border-radius: 50%; margin-right: 5px; animation: pulse 0.8s infinite; }
-        @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.7; } }
-
-        /* 全螢幕彈窗 / 狀態層 */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 999; padding: 20px;
+        .overlay-modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; padding: 20px; 
         }
-        .modal-card {
-            background: var(--card-bg); border: 2px solid var(--card-border);
-            border-radius: 20px; padding: 24px 18px; width: 100%; max-width: 380px; text-align: center;
-        }
-        .wrong-tag {
-            background: rgba(255, 77, 77, 0.2); border: 1px solid var(--danger);
-            color: var(--danger); padding: 6px 10px; border-radius: 8px; margin: 4px; font-weight: bold; font-size: 14px; display: inline-block;
+        .modal-box { 
+            background: var(--card-bg); border: 2px solid var(--card-border); 
+            border-radius: 20px; padding: 20px; max-width: 400px; width: 100%; text-align: center; 
         }
 
         .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        .leaderboard-table th { background-color: #2a2d3d; color: var(--warning); padding: 8px; }
+        .leaderboard-table th { background-color: #2a2d3d; color: var(--warning); padding: 8px; text-align: center; }
         .leaderboard-table td { padding: 8px; border-bottom: 1px solid #333646; text-align: center; }
         .my-team-row { background-color: rgba(51, 204, 128, 0.2); font-weight: bold; color: var(--primary); }
     </style>
@@ -143,217 +130,190 @@
             <div style="margin: auto 0;">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎸</div>
                 <h1>吉他社迎新解謎大冒險</h1>
-                <p>與小隊夥伴共同破解吉他和弦任務！</p>
+                <p>歡迎來到吉他社！請點擊下方按鈕抽取專屬隊伍並與身邊隊員集合。</p>
             </div>
-            <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">🎲 點我抽取專屬分組</button>
+            <button class="btn btn-green" id="btn-draw" onclick="assignTeam()">🎲 點我抽取專屬分组</button>
         </div>
     </div>
 
-    <!-- 畫面 2: 分組與成員暱稱設定大廳 -->
+    <!-- 畫面 2: 組隊與自訂名稱大廳 -->
     <div id="screen-team" class="screen">
         <div class="content-container">
             <div style="margin: auto 0;">
-                <p style="margin: 0; font-weight: bold; color: var(--accent);">【 簽到大廳 】</p>
+                <p style="margin: 0; font-weight: bold; color: var(--accent);">【 簽到成功 】</p>
                 <div class="team-name" id="display-team">--</div>
                 
                 <div class="card">
-                    <label style="font-size: 13px; color: var(--warning); font-weight: bold;">✏️ 自訂我的暱稱（顯示為：組名 - 暱稱）：</label>
+                    <p style="margin:0 0 6px 0; font-weight:bold; color:white;">👤 設定個人名稱：</p>
                     <div class="input-group">
-                        <input type="text" id="input-player-name" class="name-input" maxlength="10" placeholder="請輸入您的名字/暱稱">
-                        <button class="btn btn-green" style="width: auto; padding: 0 16px; margin: 0; font-size: 14px;" onclick="updateMyName()">儲存</button>
+                        <input type="text" id="custom-name-input" placeholder="輸入名字 (例如: 小明)" maxlength="8">
+                        <button class="btn btn-green" style="width: auto; margin:0; padding:0 15px;" onclick="saveCustomName()">儲存</button>
                     </div>
-
-                    <div style="font-size: 14px; font-weight: bold; margin-top: 8px;" id="display-count">隊員清單：</div>
-                    <div class="member-list" id="lobby-member-list"></div>
+                    <p style="font-size: 12px; color: var(--text-sub); margin:2px 0 0 0;">顯示稱呼：<span id="name-preview" style="color:var(--warning); font-weight:bold;">--</span></p>
                 </div>
 
-                <div class="checkbox-container" onclick="toggleCheckboxDirectly(event)">
-                    <input type="checkbox" id="team-ready-checkbox" onchange="onReadyCheckboxChange()">
-                    <label for="team-ready-checkbox" id="ready-label">我們全組隊員已集合完畢！</label>
+                <div class="card">
+                    <p style="margin:0 0 6px 0; font-weight:bold; color:white;">👥 本組隊員動態：</p>
+                    <div id="members-list">更新中...</div>
+                </div>
+
+                <div class="card" style="text-align:center;">
+                    <label style="cursor:pointer; font-weight:bold; font-size:15px; color:white;">
+                        <input type="checkbox" id="ready-checkbox" onchange="toggleReady()" style="width:18px; height:18px; vertical-align:middle;"> 我已集合完畢準備就緒！
+                    </label>
                 </div>
             </div>
+
             <button class="btn btn-disabled" id="btn-start-game" onclick="startGame()">⏳ 等待全員集合完畢</button>
+            <button class="btn btn-danger" style="margin-top:6px; padding:8px;" onclick="leaveTeam()">🚪 離開隊伍</button>
         </div>
     </div>
 
-    <!-- 畫面 2.5: 中途加入觀戰等待畫面 -->
-    <div id="screen-spectate" class="screen">
-        <div class="content-container">
-            <div style="margin: auto 0;">
-                <div style="font-size: 50px; margin-bottom: 10px;">👀</div>
-                <h1 style="color: var(--accent);">已納入小隊陣容</h1>
-                <div class="team-name" id="spectate-team-name">--</div>
-                <div class="card" style="text-align: center; padding: 20px 14px; border: 2px solid var(--accent);">
-                    <p style="color: var(--warning); font-size: 16px; font-weight: bold;">隊友任務進行中</p>
-                    <p id="spectate-status-msg" style="color: white; font-size: 14px;">隊友完成當前關卡後，系統將自動帶您進入下一關！</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 畫面 3: 遊戲畫面 -->
+    <!-- 畫面 3: 遊戲關卡 -->
     <div id="screen-game" class="screen">
         <div class="content-container">
-            <div class="game-header">
-                <span id="game-team-name" style="color: var(--primary);"></span>
-                <span id="level-progress-badge" class="level-progress-badge">關卡 1 / 7</span>
-                <span id="game-team-count" style="color: var(--warning);"><span class="live-dot"></span>-- 人</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:4px;">
+                <span id="game-team-name" style="color:var(--primary); font-weight:bold;"></span>
+                <span id="level-badge" style="background:#2b2e3e; padding:3px 10px; border-radius:12px; color:var(--warning);">關卡 1 / 7</span>
             </div>
 
             <div class="target-card">
-                <div class="target-header">
-                    <span style="font-size: 12px; font-weight: bold; color: var(--accent);">🎯 當前任務目標</span>
-                    <span id="mode-badge" class="mode-badge">--</span>
-                </div>
-                <div id="target-chord-display" class="target-chord-display">-- 和弦</div>
+                <div style="font-size: 12px; font-weight: bold; color: var(--accent);">🎯 本關挑戰目標</div>
+                <div id="target-chord" class="target-chord-display">-- 和弦</div>
             </div>
 
-            <div class="card" style="padding: 10px; margin: 0 0 6px 0;">
-                <div id="status-text" style="font-size: 14px; font-weight: bold;">準備中...</div>
-                <div id="hint-container" style="background: rgba(255, 215, 0, 0.08); border-left: 3px solid var(--warning); padding: 6px; margin-top: 4px;">
-                    <div id="hint-text" style="font-size: 12px; color: var(--warning); font-weight: bold;">線索載入中...</div>
-                </div>
-            </div>
-            
             <div class="canvas-container">
-                <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 4px;">👇 點擊下方指板 ( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
+                <div class="canvas-instruction">👇 點擊指板按鍵 ( 🔴 不彈 / ⭕ 空弦 / 🟢 按格 )</div>
                 <canvas id="fretboardCanvas"></canvas>
             </div>
-            
-            <button class="btn btn-green" id="btn-check" onclick="handleButtonClick()">送出答案驗證</button>
+
+            <button class="btn btn-green" id="btn-submit-answer" onclick="submitAnswer()">📤 送出個人答案並等待驗證</button>
         </div>
     </div>
 
-    <!-- 畫面 4: 通關結算畫面 -->
+    <!-- 畫面 4: 結算畫面 -->
     <div id="screen-result" class="screen">
         <div class="content-container" style="justify-content: flex-start; overflow-y: auto;">
             <div style="font-size: 45px; margin-top: 10px;">🎉</div>
-            <h1>冒險任務全數通關！</h1>
-            <div class="card" style="text-align: center;">
-                <h2 id="result-team" style="color: var(--primary); margin: 2px 0;"></h2>
-                <p id="result-stats" style="color: white; font-size: 14px;"></p>
+            <h1 style="margin: 4px 0;">冒險任務全數通關！</h1>
+            
+            <div class="card" style="margin: 8px 0; padding: 14px; text-align: center;">
+                <h2 id="result-team" style="color: var(--primary); margin: 2px 0; font-size: 26px;"></h2>
+                <p id="result-stats" style="color: white; font-size: 15px; margin: 6px 0; line-height: 1.6;"></p>
             </div>
-            <h3 style="color: var(--warning); margin: 10px 0 4px 0; text-align: left;">🏆 活動各組排行榜</h3>
-            <table class="leaderboard-table">
-                <thead><tr><th>名次</th><th>小隊</th><th>人數</th><th>成績/進度</th><th>錯數</th></tr></thead>
-                <tbody id="leaderboard-body"></tbody>
-            </table>
+
+            <h3 style="color: var(--warning); margin: 10px 0 4px 0; font-size: 16px; text-align: left;">🏆 活動各組排行榜</h3>
+            <div style="overflow-x: auto;">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>名次</th><th>小隊</th><th>人數</th><th>成績/進度</th><th>錯數</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- 全員交卷「等待中」全螢幕層 -->
-    <div id="modal-waiting" class="modal-overlay">
-        <div class="modal-card">
-            <div style="font-size: 40px; margin-bottom: 10px;">⏳</div>
-            <h2 style="color: var(--accent);">已成功交卷！</h2>
-            <p id="waiting-msg" style="color: white; font-weight: bold; font-size: 16px;">等待隊友交卷中... (已交卷 1/4 人)</p>
-            <p style="font-size: 12px; color: var(--text-sub); margin-top: 10px;">全組隊員交卷後，系統將自動進行統一驗證！</p>
+    <!-- 彈出視窗 1: 等待全組送出 -->
+    <div id="modal-waiting" class="overlay-modal">
+        <div class="modal-box">
+            <div style="font-size:40px; margin-bottom:10px;">⏳</div>
+            <h2>已送出答案！</h2>
+            <p id="waiting-status-text" style="font-size:16px; color:var(--warning); font-weight:bold;">等待其他隊員完成中...</p>
         </div>
     </div>
 
-    <!-- 答對「恭喜晉級」彈窗 -->
-    <div id="modal-success" class="modal-overlay">
-        <div class="modal-card" style="border-color: var(--primary);">
-            <div style="font-size: 50px; margin-bottom: 5px;">🎉</div>
-            <h2 style="color: var(--primary);">全組答案正確！</h2>
-            <p style="color: white; margin: 10px 0;">太棒了！全體隊員表現完美，成功破解本關和弦！</p>
-            <button class="btn btn-green" onclick="proceedNextLevel()">進入下一關 ➔</button>
+    <!-- 彈出視窗 2: 驗證成功 -->
+    <div id="modal-success" class="overlay-modal">
+        <div class="modal-box" style="border-color: var(--primary);">
+            <div style="font-size:40px; margin-bottom:10px;">🎉</div>
+            <h2 style="color: var(--primary);">恭喜全組完美答對！</h2>
+            <p style="color:white;">大家太棒了，準備進入下一關卡！</p>
+            <button class="btn btn-green" onclick="nextLevel()">前往下一關 ➔</button>
         </div>
     </div>
 
-    <!-- 答錯「錯題名單」彈窗 -->
-    <div id="modal-failure" class="modal-overlay">
-        <div class="modal-card" style="border-color: var(--danger);">
-            <div style="font-size: 50px; margin-bottom: 5px;">❌</div>
-            <h2 style="color: var(--danger);">和弦驗證失敗！</h2>
-            <p style="color: white; margin: 6px 0 2px 0;">本關卡有成員按法有誤：</p>
-            <div id="wrong-players-list" style="margin: 10px 0;"></div>
-            <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">請隊友彼此協助指導指法，重新挑戰該關卡！</p>
-            <button class="btn btn-gray" style="background: var(--danger); color: white;" onclick="retryCurrentLevel()">重新挑戰本關 🔄</button>
+    <!-- 彈出視窗 3: 驗證失敗 -->
+    <div id="modal-failed" class="overlay-modal">
+        <div class="modal-box" style="border-color: var(--danger);">
+            <div style="font-size:40px; margin-bottom:10px;">❌</div>
+            <h2 style="color: var(--danger);">回答錯誤！</h2>
+            <p style="color: white; margin-bottom: 4px;">以下成員的指法不正確：</p>
+            <div id="wrong-players-list" style="color: var(--warning); font-weight: bold; margin: 10px 0; font-size: 16px;"></div>
+            <p style="font-size: 13px; color:var(--text-sub);">請全組對照指法重新調整挑戰！</p>
+            <button class="btn btn-danger" onclick="retryLevel()">🔄 重新挑戰本關</button>
         </div>
     </div>
 
 <script>
+    // ⚠️ 請務必替換為您的 Render 後端網址 ⚠️
     const API_BASE_URL = "https://guitar-backend-q4xc.onrender.com"; 
 
-    const COLOR_PRIMARY = "#33CC80"; 
-    const COLOR_DANGER  = "#FF4D4D"; 
-
-    const CHORDS_DB = {
-        "C": { frets: {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0}, hint: "📍 實體線索：去找穿著藍色社服的學長！" },
-        "D": { frets: {6: -1, 5: -1, 4: 0, 3: 2, 2: 3, 1: 2}, hint: "📍 實體線索：答案藏在司令台右側的階梯旁。" },
-        "G": { frets: {6: 3, 5: 2, 4: 0, 3: 0, 2: 0, 1: 3}, hint: "📍 實體線索：前往體育館門口，尋找紅色信封。" },
-        "Am": { frets: {6: -1, 5: 0, 4: 2, 3: 2, 2: 1, 1: 0}, hint: "📍 實體線索：去找抱著木吉他的學姐拿提示！" },
-        "Em": { frets: {6: 0, 5: 2, 4: 2, 3: 0, 2: 0, 1: 0}, hint: "📍 實體線索：圖書館前的大樹下有你要的東西。" },
-        "F": { frets: {6: 1, 5: 3, 4: 3, 3: 2, 2: 1, 1: 1}, hint: "📍 實體線索：尋找吉他社的社旗所在處。" },
-        "Fm": { frets: {6: 1, 5: 3, 4: 3, 3: 1, 2: 1, 1: 1}, hint: "📍 實體線索：籃球場旁邊的佈告欄。" },
-        "C7": { frets: {6: -1, 5: 3, 4: 2, 3: 3, 2: 1, 1: 0}, hint: "📍 實體線索：找尋身上背著木箱鼓的關主。" }
-    };
-
-    let playerId = "";
-    let myTeam = "";
-    let myName = "";
-    let myTeamChords = ["C", "G", "Am", "Em", "F", "D", "C7"];
-    let levelModes = [];
+    let playerId = "", myTeam = "", myName = "";
     let currentLevelIndex = 0;
-    
-    let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1}; 
-    let assignedStrings = [1, 2, 3, 4, 5, 6]; 
-    let playerIndex = 0;
-    let totalPlayers = 1;
+    let userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
     let pollInterval = null;
 
-    function getModeObject(index) {
-        let rawMode = (levelModes && levelModes[index]) ? levelModes[index] : null;
-        if (rawMode && typeof rawMode === 'object') return rawMode;
-        return { type: 'lock', name: '全員獨立解鎖' };
-    }
+    const CHORDS_DB = {
+        "C": {6: -1, 5: 3, 4: 2, 3: 0, 2: 1, 1: 0},
+        "G": {6: 3, 5: 2, 4: 0, 3: 0, 2: 0, 1: 3},
+        "Am": {6: -1, 5: 0, 4: 2, 3: 2, 2: 1, 1: 0},
+        "Em": {6: 0, 5: 2, 4: 2, 3: 0, 2: 0, 1: 0},
+        "F": {6: 1, 5: 3, 4: 3, 3: 2, 2: 1, 1: 1},
+        "D": {6: -1, 5: -1, 4: 0, 3: 2, 2: 3, 1: 2},
+        "C7": {6: -1, 5: 3, 4: 2, 3: 3, 2: 1, 1: 0}
+    };
+    const CHORD_KEYS = ["C", "G", "Am", "Em", "F", "D", "C7"];
 
-    function switchScreen(screenId) {
+    function switchScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-        if(screenId === 'screen-game') setTimeout(initCanvas, 100); 
+        document.getElementById(id).classList.add('active');
+        if (id === 'screen-game') setTimeout(initCanvas, 100);
     }
 
     async function assignTeam() {
         const btn = document.getElementById('btn-draw');
-        btn.innerText = "⏳ 抽取中...";
-        btn.style.pointerEvents = "none";
+        btn.innerText = "⏳ 抽籤中..."; btn.style.pointerEvents = "none";
         try {
             const res = await fetch(`${API_BASE_URL}/api/assign-team`);
             const data = await res.json();
             playerId = data.playerId;
             myTeam = data.team;
-            myName = data.name;
-            document.getElementById('input-player-name').value = myName;
-            
-            if (data.chords) myTeamChords = data.chords;
-            if (data.levelModes) levelModes = data.levelModes;
+            myName = data.defaultName;
             
             document.getElementById('display-team').innerText = myTeam;
-            document.getElementById('spectate-team-name').innerText = `【 ${myTeam} 】`;
+            document.getElementById('custom-name-input').value = myName;
+            document.getElementById('name-preview').innerText = `${myTeam}-${myName}`;
+            
             switchScreen('screen-team');
             startPolling();
-        } catch (error) {
-            alert("⚠️ 連線失敗！請檢查伺服器狀態。");
-            btn.innerText = "🎲 點我抽取專屬分組";
-            btn.style.pointerEvents = "auto";
+        } catch(e) {
+            alert("⚠️ 連線失敗，請檢查網路或伺服器狀態！");
+            btn.innerText = "🎲 點我抽取專屬分組"; btn.style.pointerEvents = "auto";
         }
     }
 
-    async function updateMyName() {
-        const nameVal = document.getElementById('input-player-name').value;
-        if (!nameVal.trim()) return alert("請輸入暱稱");
+    async function saveCustomName() {
+        const inputVal = document.getElementById('custom-name-input').value;
+        if (!inputVal) return;
+        myName = inputVal.trim();
+        document.getElementById('name-preview').innerText = `${myTeam}-${myName}`;
+        
         await fetch(`${API_BASE_URL}/api/action`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ playerId, team: myTeam, action: 'update_name', data: { name: nameVal } })
+            body: JSON.stringify({ playerId, team: myTeam, action: 'update_name', data: { customName: myName } })
         });
         fetchStatus();
     }
 
     function startPolling() {
         fetchStatus();
-        if (!pollInterval) pollInterval = setInterval(fetchStatus, 2000);
+        if (!pollInterval) pollInterval = setInterval(fetchStatus, 1500);
+    }
+    function stopPolling() {
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
     }
 
     async function fetchStatus() {
@@ -361,72 +321,71 @@
         try {
             const res = await fetch(`${API_BASE_URL}/api/status?team=${myTeam}&playerId=${playerId}`);
             const data = await res.json();
+            if (!data.teamData) return;
 
-            if (data.teamData) {
-                const td = data.teamData;
-                totalPlayers = td.totalPlayers || 1;
-                playerIndex = td.playerIndex || 0;
-                if (td.levelModes) levelModes = td.levelModes;
+            const td = data.teamData;
 
-                // 更新大廳成員清單
-                const memberListDiv = document.getElementById('lobby-member-list');
-                memberListDiv.innerHTML = td.players.map(p => `
-                    <div class="member-item">
-                        <span><strong>${myTeam} - ${p.name}</strong></span>
-                        <span style="color:${p.isReady ? 'var(--primary)' : 'var(--text-sub)'}">${p.isReady ? '✅ 已準備' : '⏳ 未準備'}</span>
-                    </div>
-                `).join('');
+            // 1. 更新大廳名單 [組名-成員名]
+            const membersContainer = document.getElementById('members-list');
+            membersContainer.innerHTML = td.playersList.map(p => 
+                `<span class="member-badge ${p.isReady ? 'ready' : ''}">${p.fullName} ${p.isReady ? '✓' : ''}</span>`
+            ).join('');
 
-                document.getElementById('display-count').innerText = `隊員清單 (${td.readyCount}/${td.totalLobbyPlayers} 人已準備)：`;
-                document.getElementById('game-team-count').innerHTML = `<span class="live-dot"></span>${totalPlayers} 人`;
+            // 2. 更新 Ready Checkbox 狀態
+            const cb = document.getElementById('ready-checkbox');
+            if (cb && cb.checked !== td.isMyReady) cb.checked = td.isMyReady;
 
-                // 同步自己的 Ready 狀態
-                const cb = document.getElementById('team-ready-checkbox');
-                if (cb && cb.checked !== td.isMyReady) cb.checked = td.isMyReady;
+            // 3. 更新大廳開賽按鈕
+            const btnStart = document.getElementById('btn-start-game');
+            if (td.allReady) {
+                btnStart.className = "btn btn-green"; btnStart.innerText = "🚀 集合完畢，開始遊戲！";
+            } else {
+                btnStart.className = "btn btn-disabled"; btnStart.innerText = `⏳ 等待全員集合 (${td.readyCount}/${td.totalLobbyPlayers})`;
+            }
 
-                // 控制大廳按鈕
-                const btnStart = document.getElementById('btn-start-game');
-                if (td.allReady) {
-                    btnStart.className = "btn btn-green"; btnStart.innerText = "🚀 進入第一個關卡！";
-                } else {
-                    btnStart.className = "btn btn-disabled"; btnStart.innerText = `⏳ 等待全員集合完畢 (${td.readyCount}/${td.totalLobbyPlayers})`;
+            // 4. 控制遊戲關卡跳轉與彈窗狀態
+            if (td.isStarted) {
+                if (document.getElementById('screen-team').classList.contains('active')) {
+                    document.getElementById('game-team-name').innerText = `${myTeam}-${myName}`;
+                    switchScreen('screen-game');
+                    loadLevel(td.currentLevelIndex);
                 }
-
-                // 遊戲狀態與晉級判斷
-                if (td.isStarted) {
-                    if (td.isSpectating) {
-                        if (!document.getElementById('screen-spectate').classList.contains('active')) switchScreen('screen-spectate');
-                    } else {
-                        if (document.getElementById('screen-team').classList.contains('active') || document.getElementById('screen-spectate').classList.contains('active')) {
-                            document.getElementById('game-team-name').innerText = `【 ${myTeam} 】`;
-                            currentLevelIndex = td.currentLevelIndex || 0;
-                            switchScreen('screen-game');
-                            loadQuestion();
-                        }
-                    }
-                }
-
-                calcAssignedStrings();
 
                 if (document.getElementById('screen-game').classList.contains('active')) {
-                    syncGameState(td);
+                    // 同步關卡進度
+                    if (td.currentLevelIndex !== currentLevelIndex) {
+                        currentLevelIndex = td.currentLevelIndex;
+                        loadLevel(currentLevelIndex);
+                    }
+
+                    // 控制 Modal 顯示
+                    if (td.hasSubmitted && (!td.levelResult || td.levelResult.status === 'pending')) {
+                        document.getElementById('modal-waiting').style.display = 'flex';
+                        document.getElementById('waiting-status-text').innerText = `目前已繳交：${td.submittedCount} / ${td.totalPlayers} 人`;
+                    } else {
+                        document.getElementById('modal-waiting').style.display = 'none';
+                    }
+
+                    if (td.levelResult) {
+                        if (td.levelResult.status === 'passed') {
+                            document.getElementById('modal-success').style.display = 'flex';
+                            document.getElementById('modal-failed').style.display = 'none';
+                        } else if (td.levelResult.status === 'failed') {
+                            document.getElementById('wrong-players-list').innerText = td.levelResult.wrongPlayers.join(', ');
+                            document.getElementById('modal-failed').style.display = 'flex';
+                            document.getElementById('modal-success').style.display = 'none';
+                        }
+                    } else {
+                        document.getElementById('modal-success').style.display = 'none';
+                        document.getElementById('modal-failed').style.display = 'none';
+                    }
                 }
             }
-        } catch (e) { console.log("連線同步中..."); }
+        } catch(e) {}
     }
 
-    function calcAssignedStrings() {
-        if (totalPlayers <= 1) { assignedStrings = [1, 2, 3, 4, 5, 6]; return; }
-        let list = [];
-        for (let s = 1; s <= 6; s++) {
-            let owner = Math.min(Math.floor((s - 1) / (6 / totalPlayers)), totalPlayers - 1);
-            if (owner === playerIndex) list.push(s);
-        }
-        assignedStrings = list.length > 0 ? list : [1];
-    }
-
-    async function onReadyCheckboxChange() {
-        const cb = document.getElementById('team-ready-checkbox');
+    async function toggleReady() {
+        const cb = document.getElementById('ready-checkbox');
         await fetch(`${API_BASE_URL}/api/action`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ playerId, team: myTeam, action: 'toggle_ready', data: { isReady: cb.checked } })
@@ -434,135 +393,77 @@
         fetchStatus();
     }
 
-    function toggleCheckboxDirectly(e) {
-        if (e.target.tagName !== 'INPUT') {
-            const cb = document.getElementById('team-ready-checkbox');
-            cb.checked = !cb.checked;
-            onReadyCheckboxChange();
-        }
-    }
-
     async function startGame() {
         const btn = document.getElementById('btn-start-game');
         if (btn.classList.contains('btn-disabled')) return;
-
-        const res = await fetch(`${API_BASE_URL}/api/action`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
-        });
-        const data = await res.json();
-        if (data.error) alert(data.error);
-        else {
-            currentLevelIndex = 0;
-            switchScreen('screen-game');
-            loadQuestion();
-        }
-    }
-
-    function loadQuestion() {
-        if (currentLevelIndex >= myTeamChords.length) { finishGame(); return; }
-
-        let targetChord = myTeamChords[currentLevelIndex];
-        let modeObj = getModeObject(currentLevelIndex);
-        userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
-
-        document.getElementById('target-chord-display').innerText = `${targetChord} 和弦`;
-        document.getElementById('mode-badge').innerText = modeObj.name;
-        document.getElementById('level-progress-badge').innerText = `關卡 ${currentLevelIndex + 1} / ${myTeamChords.length}`;
-        
-        document.getElementById('btn-check').className = "btn btn-green";
-        document.getElementById('btn-check').innerText = "送出答案驗證";
-
-        let modeHint = (modeObj.type === 'ensemble' || modeObj.type === 'boss') ? ` (您負責第 ${assignedStrings.join(', ')} 弦)` : '';
-        document.getElementById('status-text').innerText = `請在指板上按出 ${targetChord} 和弦${modeHint}`;
-        
-        let hintText = CHORDS_DB[targetChord] ? CHORDS_DB[targetChord].hint : "";
-        document.getElementById('hint-container').style.display = hintText ? "block" : "none";
-        document.getElementById('hint-text').innerText = hintText;
-
-        hideModals();
-        setTimeout(drawFretboard, 100);
-    }
-
-    function hideModals() {
-        document.getElementById('modal-waiting').style.display = 'none';
-        document.getElementById('modal-success').style.display = 'none';
-        document.getElementById('modal-failure').style.display = 'none';
-    }
-
-    function syncGameState(td) {
-        if (td.currentLevelIndex !== undefined && td.currentLevelIndex !== currentLevelIndex) {
-            currentLevelIndex = td.currentLevelIndex;
-            loadQuestion();
-            return;
-        }
-
-        if (td.ensembleFrets) {
-            for (let s = 1; s <= 6; s++) {
-                if (td.ensembleFrets[s] !== undefined) userInput[s] = td.ensembleFrets[s];
-            }
-            drawFretboard();
-        }
-
-        // 交卷等待與結果彈窗控制
-        if (td.isMySubmitted && !td.levelResult) {
-            document.getElementById('modal-waiting').style.display = 'flex';
-            document.getElementById('waiting-msg').innerText = `等待隊友交卷中... (已交卷 ${td.submissionsCount} / ${totalPlayers} 人)`;
-        } else {
-            document.getElementById('modal-waiting').style.display = 'none';
-        }
-
-        if (td.levelResult) {
-            if (td.levelResult.status === 'SUCCESS') {
-                document.getElementById('modal-success').style.display = 'flex';
-            } else if (td.levelResult.status === 'FAILED') {
-                const listDiv = document.getElementById('wrong-players-list');
-                listDiv.innerHTML = td.levelResult.wrongPlayerNames.map(name => `<span class="wrong-tag">${name}</span>`).join('');
-                document.getElementById('modal-failure').style.display = 'flex';
-            }
-        }
-    }
-
-    async function handleButtonClick() {
-        let targetChord = myTeamChords[currentLevelIndex];
-        let correct = CHORDS_DB[targetChord] ? CHORDS_DB[targetChord].frets : {};
-        let isCorrect = true;
-        
-        for (let i = 1; i <= 6; i++) {
-            if (userInput[i] !== correct[i]) isCorrect = false;
-        }
-
-        let myFrets = {};
-        assignedStrings.forEach(s => myFrets[s] = userInput[s]);
-
         await fetch(`${API_BASE_URL}/api/action`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                playerId, team: myTeam, action: 'submit_answer',
-                data: { isCorrect: isCorrect, frets: myFrets }
-            })
+            body: JSON.stringify({ playerId, team: myTeam, action: 'start_game' })
         });
         fetchStatus();
     }
 
-    async function retryCurrentLevel() {
+    function loadLevel(idx) {
+        currentLevelIndex = idx;
+        if (currentLevelIndex >= CHORD_KEYS.length) {
+            finishGame();
+            return;
+        }
+        userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
+        document.getElementById('level-badge').innerText = `關卡 ${currentLevelIndex + 1} / ${CHORD_KEYS.length}`;
+        document.getElementById('target-chord').innerText = `${CHORD_KEYS[currentLevelIndex]} 和弦`;
+        
+        const btnSub = document.getElementById('btn-submit-answer');
+        btnSub.className = "btn btn-green";
+        btnSub.innerText = "📤 送出個人答案並等待驗證";
+        
+        drawFretboard();
+    }
+
+    async function submitAnswer() {
+        const targetChord = CHORD_KEYS[currentLevelIndex];
+        const correctFrets = CHORDS_DB[targetChord];
+        let isCorrect = true;
+        for (let s = 1; s <= 6; s++) {
+            if (userInput[s] !== correctFrets[s]) isCorrect = false;
+        }
+
+        await fetch(`${API_BASE_URL}/api/action`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ playerId, team: myTeam, action: 'submit_answer', data: { isCorrect, userInput } })
+        });
+        fetchStatus();
+    }
+
+    async function nextLevel() {
+        document.getElementById('modal-success').style.display = 'none';
+        await fetch(`${API_BASE_URL}/api/action`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ playerId, team: myTeam, action: 'next_level' })
+        });
+        fetchStatus();
+    }
+
+    async function retryLevel() {
+        // 核心修正：關閉失敗彈窗，徹底清空本地端按法並更新繪圖
+        document.getElementById('modal-failed').style.display = 'none';
+        userInput = {6: -1, 5: -1, 4: -1, 3: -1, 2: -1, 1: -1};
+        drawFretboard();
+
         await fetch(`${API_BASE_URL}/api/action`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ playerId, team: myTeam, action: 'retry_level' })
         });
-        hideModals();
         fetchStatus();
     }
 
-    async function proceedNextLevel() {
-        const res = await fetch(`${API_BASE_URL}/api/action`, {
+    async function leaveTeam() {
+        stopPolling();
+        await fetch(`${API_BASE_URL}/api/action`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ playerId, team: myTeam, action: 'next_level' })
+            body: JSON.stringify({ playerId, team: myTeam, action: 'leave_team' })
         });
-        const data = await res.json();
-        hideModals();
-        if (data.isFinished) finishGame();
-        else fetchStatus();
+        location.reload();
     }
 
     async function finishGame() {
@@ -576,8 +477,8 @@
         let secs = (myTeamRank.finishTimeSeconds || 0) % 60;
         
         document.getElementById('result-stats').innerHTML = `
-            通關總耗時: <strong style="color:${COLOR_PRIMARY}">${mins} 分 ${secs} 秒</strong><br>
-            答錯總次數: <strong style="color:${COLOR_DANGER}">${myTeamRank.wrongAttempts || 0}</strong> 次
+            通關總耗時: <strong style="color:var(--primary);">${mins} 分 ${secs} 秒</strong><br>
+            答錯總次數: <strong style="color:var(--danger);">${myTeamRank.wrongAttempts || 0}</strong> 次
         `;
 
         let tbody = document.getElementById('leaderboard-body');
@@ -594,10 +495,7 @@
         switchScreen('screen-result');
     }
 
-    function stopPolling() {
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    }
-
+    // Canvas 渲染與互動邏輯
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -612,46 +510,44 @@
     });
 
     function drawFretboard() {
-        if (canvas.width === 0 || canvas.height === 0) return;
+        if (!canvas.width) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         let padX = 42, padY = 22;
         let w = canvas.width - padX * 2, h = canvas.height - padY * 2;
         let fretW = w / 3, stringH = h / 5;
 
+        // 琴枕與品絲
         ctx.fillStyle = '#E6E6D8'; ctx.fillRect(padX - 8, padY - 5, 10, h + 10);
         ctx.strokeStyle = '#606478'; ctx.lineWidth = 2;
         for (let i = 1; i <= 3; i++) {
             ctx.beginPath(); ctx.moveTo(padX + i * fretW, padY); ctx.lineTo(padX + i * fretW, padY + h); ctx.stroke();
         }
 
-        let mode = getModeObject(currentLevelIndex).type;
+        // 琴弦與名稱
         const stringNames = {1: '1弦(e)', 2: '2弦(B)', 3: '3弦(G)', 4: '4弦(D)', 5: '5弦(A)', 6: '6弦(E)'};
-        
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
-            let y = padY + (stringNum - 1) * stringH; 
-            let isMine = (mode === 'ensemble' || mode === 'boss') ? assignedStrings.includes(stringNum) : true;
-            ctx.strokeStyle = isMine ? ((mode === 'ensemble' || mode === 'boss') ? '#00E5FF' : '#B0B5C8') : '#363948';
-            ctx.lineWidth = isMine ? 2.5 + ((stringNum - 1) * 0.4) : 1;
+            let y = padY + (stringNum - 1) * stringH;
+            ctx.strokeStyle = '#00E5FF'; ctx.lineWidth = 2 + ((stringNum - 1) * 0.3);
             ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + w, y); ctx.stroke();
-            ctx.fillStyle = isMine ? '#FFFFFF' : '#555868';
-            ctx.font = 'bold 11px Arial'; ctx.fillText(stringNames[stringNum], 4, y + 4);
+            ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 11px Arial'; ctx.fillText(stringNames[stringNum], 4, y + 4);
         }
 
+        // 按鍵與狀態標記
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
             if (fretVal === -1) {
-                ctx.strokeStyle = COLOR_DANGER; ctx.lineWidth = 3;
+                ctx.strokeStyle = '#FF4D4D'; ctx.lineWidth = 3;
                 let cx = padX - 22;
                 ctx.beginPath(); ctx.moveTo(cx - 5, y - 5); ctx.lineTo(cx + 5, y + 5);
                 ctx.moveTo(cx - 5, y + 5); ctx.lineTo(cx + 5, y - 5); ctx.stroke();
             } else if (fretVal === 0) {
-                ctx.strokeStyle = COLOR_PRIMARY; ctx.lineWidth = 3;
+                ctx.strokeStyle = '#33CC80'; ctx.lineWidth = 3;
                 let cx = padX - 22;
                 ctx.beginPath(); ctx.arc(cx, y, 6, 0, Math.PI * 2); ctx.stroke();
             } else {
                 let cx = padX + (fretVal - 0.5) * fretW;
-                ctx.fillStyle = COLOR_PRIMARY; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
+                ctx.fillStyle = '#33CC80'; ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(cx, y, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = '#000000'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(fretVal.toString(), cx, y);
@@ -659,8 +555,7 @@
         }
     }
 
-    canvas.addEventListener('pointerdown', async (e) => {
-        let mode = getModeObject(currentLevelIndex).type;
+    canvas.addEventListener('pointerdown', (e) => {
         let rect = canvas.getBoundingClientRect();
         let scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
         let x = (e.clientX - rect.left) * scaleX, y = (e.clientY - rect.top) * scaleY;
@@ -672,10 +567,9 @@
             if (Math.abs(y - (padY + (stringNum - 1) * stringH)) < stringH / 1.5) { clickedString = stringNum; break; }
         }
         if (!clickedString) return;
-        if ((mode === 'ensemble' || mode === 'boss') && !assignedStrings.includes(clickedString)) return;
 
         let clickedFret = -1;
-        if (x < padX) clickedFret = 0; 
+        if (x < padX) clickedFret = 0;
         else {
             for (let i = 1; i <= 3; i++) {
                 if (x >= padX + (i-1)*fretW && x <= padX + i*fretW) { clickedFret = i; break; }
@@ -684,15 +578,6 @@
 
         userInput[clickedString] = (userInput[clickedString] === clickedFret) ? -1 : clickedFret;
         drawFretboard();
-
-        if (mode === 'ensemble' || mode === 'boss') {
-            let myFrets = {};
-            assignedStrings.forEach(s => myFrets[s] = userInput[s]);
-            await fetch(`${API_BASE_URL}/api/action`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ playerId, team: myTeam, action: 'ensemble_update', data: { frets: myFrets } })
-            });
-        }
     });
 </script>
 </body>
