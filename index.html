@@ -272,39 +272,37 @@
         if (id === 'screen-game') setTimeout(initCanvas, 100);
     }
 
-    // 防刷機制：頁面載入時優先讀取 LocalStorage 紀錄
+    // 頁面載入時：自動發送 LocalStorage 舊身份至後端進行鎖定驗證
     window.addEventListener('DOMContentLoaded', () => {
         const savedPlayerId = localStorage.getItem('guitar_player_id');
         const savedTeam = localStorage.getItem('guitar_player_team');
         
-        if (savedPlayerId && savedTeam) {
-            playerId = savedPlayerId;
-            myTeam = savedTeam;
-            document.getElementById('display-team').innerText = myTeam;
-            switchScreen('screen-team');
-            startPolling();
+        if (savedPlayerId) {
+            assignTeam(savedPlayerId, savedTeam);
         }
     });
 
-    async function assignTeam() {
-        const savedPlayerId = localStorage.getItem('guitar_player_id');
-        if (savedPlayerId && myTeam) {
-            switchScreen('screen-team');
-            startPolling();
-            return;
-        }
+    async function assignTeam(existingId = null, existingTeam = null) {
+        const savedPlayerId = existingId || localStorage.getItem('guitar_player_id');
+        const savedTeam = existingTeam || localStorage.getItem('guitar_player_team');
 
         const btn = document.getElementById('btn-draw');
-        btn.innerText = "⏳ 抽籤中..."; btn.style.pointerEvents = "none";
+        if (btn) { btn.innerText = "⏳ 驗證隊伍中..."; btn.style.pointerEvents = "none"; }
+
         try {
-            const res = await fetch(`${API_BASE_URL}/api/assign-team`);
+            let url = `${API_BASE_URL}/api/assign-team`;
+            if (savedPlayerId) {
+                url += `?existingPlayerId=${encodeURIComponent(savedPlayerId)}&existingTeam=${encodeURIComponent(savedTeam || '')}`;
+            }
+
+            const res = await fetch(url);
             const data = await res.json();
             playerId = data.playerId;
             myTeam = data.team;
             myName = data.defaultName;
             teamChords = data.chords;
 
-            // 寫入本地存儲鎖定
+            // 雙向鎖定於 LocalStorage
             localStorage.setItem('guitar_player_id', playerId);
             localStorage.setItem('guitar_player_team', myTeam);
             
@@ -316,7 +314,7 @@
             startPolling();
         } catch(e) {
             alert("⚠️ 連線失敗，請檢查網路！");
-            btn.innerText = "🎲 點我抽取專屬分組"; btn.style.pointerEvents = "auto";
+            if (btn) { btn.innerText = "🎲 點我抽取專屬分組"; btn.style.pointerEvents = "auto"; }
         }
     }
 
@@ -505,7 +503,7 @@
         switchScreen('screen-result');
     }
 
-    // Canvas 渲染 (加寬邊距防遮擋)
+    // Canvas 渲染 (加寬左側邊距防文字截斷)
     const canvas = document.getElementById('fretboardCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -523,7 +521,7 @@
         if (!canvas.width) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        let padX = 65, padY = 22; // padX 擴張至 65px 防止最左側標籤被裁切
+        let padX = 65, padY = 22;
         let w = canvas.width - padX - 25, h = canvas.height - padY * 2;
         let fretW = w / 3, stringH = h / 5;
 
@@ -534,14 +532,14 @@
             ctx.beginPath(); ctx.moveTo(padX + i * fretW, padY); ctx.lineTo(padX + i * fretW, padY + h); ctx.stroke();
         }
 
-        // 琴弦與膠籤背景框（優化顯示體驗）
+        // 琴弦與深色標籤背景
         const stringNames = {1: '1弦(e)', 2: '2弦(B)', 3: '3弦(G)', 4: '4弦(D)', 5: '5弦(A)', 6: '6弦(E)'};
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let y = padY + (stringNum - 1) * stringH;
             ctx.strokeStyle = '#00E5FF'; ctx.lineWidth = 2 + ((stringNum - 1) * 0.3);
             ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(padX + w, y); ctx.stroke();
 
-            // 標籤框底色背景
+            // 標籤背景底框
             ctx.fillStyle = '#1e2029';
             ctx.fillRect(4, y - 9, 50, 18);
             ctx.strokeStyle = '#2d3142';
@@ -555,7 +553,7 @@
             ctx.fillText(stringNames[stringNum], 29, y);
         }
 
-        // 按鍵圓圈與狀態標記
+        // 按鍵與狀態繪製
         for (let stringNum = 1; stringNum <= 6; stringNum++) {
             let fretVal = userInput[stringNum];
             let y = padY + (stringNum - 1) * stringH;
